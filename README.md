@@ -52,10 +52,6 @@ The site serves as both a professional portfolio and a digital garden where idea
 git clone https://github.com/monibahmed/monib.life.git
 cd monib.life
 
-# Configure proxy (if behind corporate firewall)
-npm config set proxy http://proxy-us.intel.com:912
-npm config set https-proxy http://proxy-us.intel.com:912
-
 # Install dependencies
 npm install
 
@@ -119,12 +115,6 @@ lsof -ti:3000 | xargs kill -9
 npm run dev -- -p 3001
 ```
 
-**Proxy authentication issues:**
-```bash
-# Use authenticated proxy
-npm config set proxy http://username:password@proxy-us.intel.com:912
-npm config set https-proxy http://username:password@proxy-us.intel.com:912
-```
 
 ## 📁 Project Structure
 
