@@ -20,9 +20,11 @@ interface D3Node extends GraphNode {
   fy?: number | null
 }
 
-interface D3Link extends GraphEdge {
+interface D3Link {
+  id: string
   source: string | D3Node
   target: string | D3Node
+  type?: string
 }
 
 export function OrgRoamGraph({ nodes, edges, onNodeClick, onNodeHover }: OrgRoamGraphProps) {
@@ -108,7 +110,7 @@ export function OrgRoamGraph({ nodes, edges, onNodeClick, onNodeHover }: OrgRoam
       )
       .force('center', d3.forceCenter(dimensions.width / 2, dimensions.height / 2))
       .force('collision', d3.forceCollide()
-        .radius(d => getNodeSize(d) + 8)
+        .radius(d => getNodeSize(d as D3Node) + 8)
         .strength(0.8)
       )
       .alphaDecay(0.02)  // Slower decay for more stable settling
@@ -302,7 +304,8 @@ export function OrgRoamGraph({ nodes, edges, onNodeClick, onNodeHover }: OrgRoam
     const container = svg.select('.zoom-container')
     
     try {
-      const bounds = container.node()?.getBBox()
+      const containerNode = container.node() as SVGGElement
+      const bounds = containerNode?.getBBox()
       if (!bounds) return
 
       const fullWidth = dimensions.width
