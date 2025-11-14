@@ -1,99 +1,206 @@
 # monib.life
 
-Personal website for Monib Ahmed - A clean, modern digital presence featuring thoughts, projects, and professional experience.
+Personal website for Monib Ahmed - A modern digital garden featuring thoughts, projects, and professional experience with interactive graph visualization.
 
-## Project Overview
+## 🌟 Live Demo
 
-**monib.life** is Monib Ahmed's personal website built around three core components:
+**Development Server:** http://localhost:3000 (after `npm run dev`)  
+**Production Site:** *Coming soon - ready for deployment*
+
+## 🚀 Project Overview
+
+**monib.life** is Monib Ahmed's personal website built around four interconnected components:
 
 1. **📝 Thoughts & Articles** - Personal writings, insights, and technical articles
-2. **🛠️ Projects** - Portfolio of development work and creative projects
-3. **📄 Resume** - Professional experience and career highlights
+2. **🛠️ Projects** - Portfolio of development work and creative projects  
+3. **📄 Resume** - Interactive professional experience and career highlights
+4. **🕸️ Graph View** - Interactive knowledge graph showing connections between all content
 
-The site serves as both a professional portfolio and a platform for sharing ideas and work with the community.
+The site serves as both a professional portfolio and a digital garden where ideas, projects, and experiences connect and evolve together.
 
-## Development Setup
+## ✨ Key Features
+
+- **Org-Roam-UI Inspired Graph** - D3.js powered interactive knowledge graph with force simulation
+- **Mobile-First Design** - Responsive design optimized for all screen sizes and devices
+- **Content Management** - Markdown + frontmatter with automatic relationship detection
+- **Search & Filtering** - Find content across all sections with real-time graph highlighting
+- **Interactive Navigation** - Drag, zoom, click nodes to explore content connections
+- **Sample Content** - Pre-populated with example thoughts, projects, skills, and experiences
+- **Production Ready** - Complete implementation ready for deployment
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 14.2.33 with TypeScript and App Router
+- **Styling**: Tailwind CSS with custom design system and responsive components
+- **Graph Visualization**: D3.js force simulation with SVG rendering (org-roam-ui inspired)
+- **Content**: Markdown with gray-matter frontmatter parsing and automatic relationships
+- **UI Components**: Lucide React icons + custom interactive components
+- **Development**: ESLint, TypeScript strict mode, Hot reload, proxy support
+- **Deployment**: Ready for Vercel deployment with optimized build
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js (v18 or higher recommended)
-- npm or yarn package manager  
-- Git for version control
-- Modern web browser for testing
+- Node.js 18+ 
+- npm, yarn, or pnpm
+- Git
 
-### Development Environment
-This project is developed in a **WSL2 (Debian) + Nix** environment:
-
-**System Setup:**
-- WSL2 with Debian-based distribution
-- Zsh shell with Starship prompt
-- Nix package manager for reproducible environments
-- Intel corporate proxy configuration
-- Configuration managed via ~/wsl-config repository
-
-**Package Management Options:**
-```bash
-# Option 1: Install Node.js via Nix (recommended for reproducibility)
-nix-env -iA nixpkgs.nodejs
-nix-shell -p nodejs npm  # Temporary shell with Node.js
-
-# Option 2: Use system Node.js (if already installed)
-node --version
-npm --version
-
-# Option 3: Use Nix shell for project development
-nix-shell -p nodejs npm yarn
-```
-
-**Proxy Considerations:**
-All network requests automatically use proxy configuration:
-- HTTP/HTTPS proxy: http://proxy-us.intel.com:912
-- Git operations proxy-aware
-- npm/yarn operations proxy-aware
-
-### Getting Started
+### Installation
 
 ```bash
-# Navigate to projects directory (using configured alias)
-proj
-
-# Clone the repository (if using git)
-git clone <repository-url>
+# Clone the repository
+git clone https://github.com/monibahmed/monib.life.git
 cd monib.life
 
-# Set up development environment with Nix (recommended)
-nix-shell -p nodejs npm yarn
+# Configure proxy (if behind corporate firewall)
+npm config set proxy http://proxy-us.intel.com:912
+npm config set https-proxy http://proxy-us.intel.com:912
 
-# OR install Node.js globally via Nix
-nix-env -iA nixpkgs.nodejs
-
-# Install dependencies (when package.json is created)
+# Install dependencies
 npm install
 
-# Start development server (framework dependent)
+# Start development server
 npm run dev
+
+# Open http://localhost:3000 in your browser
 ```
 
-**Available Shell Aliases:**
+### Proxy Configuration
+
+If you're behind a corporate firewall, configure npm proxy settings:
+
 ```bash
-proj        # cd ~/projects
-config      # cd ~/wsl-config  
-md <dir>    # mkdir -p <dir>
-ll          # ls -la
-gs          # git status
-ga          # git add
-gc          # git commit
+# Set npm proxy configuration
+npm config set proxy http://proxy-us.intel.com:912
+npm config set https-proxy http://proxy-us.intel.com:912
+npm config set registry https://registry.npmjs.org/
+
+# Alternative: Set environment variables
+export HTTP_PROXY=http://proxy-us.intel.com:912
+export HTTPS_PROXY=http://proxy-us.intel.com:912
+export NO_PROXY=localhost,127.0.0.1
+
+# Verify proxy settings
+npm config list
 ```
 
-## Tech Stack
+### Available Scripts
 
-*To be determined based on project requirements*
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production  
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run type-check   # Run TypeScript checks
+```
 
-**Potential Technologies:**
-- **Frontend Framework:** React, Next.js, Vue.js, or vanilla HTML/CSS/JS
-- **Styling:** CSS, SCSS, Tailwind CSS, or styled-components
-- **Build Tools:** Vite, Webpack, or framework-specific tooling
-- **Hosting:** Vercel, Netlify, GitHub Pages, or custom hosting
-- **CMS:** Headless CMS (Strapi, Contentful) or static content
+## 🎯 Implementation Status
+
+### ✅ Completed Features
+- **Homepage** - Hero section with navigation to all sections
+- **Thoughts Page** - Article listing with featured content and individual article pages
+- **Projects Page** - Portfolio showcase with technology breakdowns and external links
+- **Resume Page** - Interactive timeline with skills matrix and experience details
+- **Graph Page** - Org-roam-ui inspired D3.js visualization with 15+ sample nodes
+- **Navigation** - Responsive header with mobile menu and sticky positioning
+- **Content System** - Markdown processing with frontmatter and relationship detection
+- **API Routes** - `/api/graph` endpoint serving graph data for client-side rendering
+- **Styling** - Complete Tailwind CSS design system with hover effects and transitions
+
+### 🎨 Graph Visualization Features
+- **Force-Directed Layout** - Nodes naturally organize by relationships using D3.js physics
+- **Interactive Controls** - Drag nodes, zoom/pan, click to select, hover to highlight
+- **Node Types** - Color-coded: Blue (thoughts), Green (projects), Purple (skills), Orange (experience)
+- **Connection Types** - Solid lines (related), Dashed lines (uses), Dynamic edge highlighting
+- **Scalable Architecture** - Designed to handle 100s-1000s of nodes smoothly
+- **Visual Feedback** - Selected nodes get red borders, hover effects, smooth transitions
+- **Performance Optimized** - Efficient rendering with collision detection and alpha decay
+
+### Troubleshooting
+
+#### Common Issues
+
+**npm install hangs or fails:**
+- Check proxy configuration: `npm config list`
+- Clear npm cache: `npm cache clean --force`
+- Try different registry: `npm install --registry https://registry.npmjs.org/`
+
+**TypeScript errors:**
+- Install dependencies first: `npm install`
+- Check Node.js version: `node --version` (should be 18+)
+- Restart VS Code after installing dependencies
+
+**Port 3000 already in use:**
+```bash
+# Kill process using port 3000
+lsof -ti:3000 | xargs kill -9
+# Or use different port
+npm run dev -- -p 3001
+```
+
+**Proxy authentication issues:**
+```bash
+# Use authenticated proxy
+npm config set proxy http://username:password@proxy-us.intel.com:912
+npm config set https-proxy http://username:password@proxy-us.intel.com:912
+```
+
+## 📁 Project Structure
+
+```
+monib.life/
+├── src/                    # Source code
+│   ├── app/               # Next.js App Router pages
+│   │   ├── thoughts/      # Blog/articles pages
+│   │   │   ├── page.tsx           # Thoughts listing page
+│   │   │   └── [slug]/page.tsx    # Individual article pages
+│   │   ├── projects/      # Portfolio pages  
+│   │   │   ├── page.tsx           # Projects listing page
+│   │   │   └── [slug]/page.tsx    # Individual project pages
+│   │   ├── resume/        # Resume page
+│   │   │   └── page.tsx           # Interactive resume
+│   │   ├── graph/         # Graph visualization page
+│   │   │   └── page.tsx           # Knowledge graph interface
+│   │   ├── layout.tsx     # Root layout with navigation
+│   │   ├── page.tsx       # Homepage
+│   │   └── globals.css    # Global styles
+│   ├── components/        # React components
+│   │   ├── thoughts/      # Article-specific components
+│   │   ├── projects/      # Project-specific components
+│   │   ├── resume/        # Resume-specific components
+│   │   ├── graph/         # Graph visualization components
+│   │   └── common/        # Shared UI components
+│   │       ├── Navigation.tsx     # Site navigation
+│   │       └── Footer.tsx         # Site footer
+│   ├── lib/              # Utility libraries
+│   │   ├── content.ts     # Content management functions
+│   │   └── graph.ts       # Graph data processing
+│   ├── types/            # TypeScript type definitions
+│   │   └── index.ts       # All type definitions
+│   └── utils/            # General utility functions
+│       └── index.ts       # Utility functions
+├── content/              # Content files
+│   ├── thoughts/         # Markdown articles
+│   │   ├── welcome-to-digital-garden.md
+│   │   └── building-scalable-nextjs-apps.md
+│   ├── projects/         # Project descriptions
+│   │   ├── personal-website-graph.md
+│   │   └── react-component-library.md
+│   ├── resume/          # Resume data (JSON)
+│   │   └── resume-data.json
+│   └── graph/           # Graph metadata
+├── public/              # Static assets
+│   ├── images/          # Images and media
+│   └── resume/          # Resume PDFs
+├── AGENTS.md           # Human-AI collaboration tracking
+├── README.md           # Project documentation
+├── package.json        # Dependencies and scripts
+├── tailwind.config.js  # Tailwind CSS configuration
+├── tsconfig.json       # TypeScript configuration
+└── next.config.js      # Next.js configuration
+```
+
+
 
 ## Site Architecture
 
@@ -145,47 +252,35 @@ monib.life/
 └── docs/               # Additional documentation
 ```
 
-## Features (Planned)
+## 🌟 Implemented Features
 
-### Core Pages
-- **Home** - Welcome page with navigation to three main sections
-- **Thoughts** - Blog/articles listing and individual post pages
-- **Projects** - Portfolio gallery with detailed project pages
-- **Resume** - Interactive CV with download functionality
-- **About** - Personal background and contact information
+### ✅ Core Pages
+- **Home** - Hero section with gradient text and feature cards linking to all sections
+- **Thoughts** - Article listing with featured posts, tags, and individual markdown-rendered pages
+- **Projects** - Portfolio showcase with status badges, technology tags, and external links
+- **Resume** - Interactive timeline, skills matrix, and experience details with JSON data
+- **Graph** - Org-roam-ui inspired knowledge visualization with D3.js force simulation
 
-### Component-Specific Features
+### ✅ Graph Visualization Features
+- **Interactive Nodes** - Click to select, drag to reposition, hover to highlight connections
+- **Force Simulation** - Physics-based layout with collision detection and natural organization
+- **Node Types** - Color-coded content types (thoughts=blue, projects=green, skills=purple, experience=orange)
+- **Edge Types** - Visual distinction between "related" and "uses" relationships
+- **Zoom & Pan** - Mouse wheel zoom, drag to pan, fit-to-view and reheat controls
+- **Performance** - Optimized for large graphs with efficient D3.js rendering
 
-#### Thoughts & Articles
-- **Markdown Support** - Rich text formatting for articles
-- **Code Highlighting** - Syntax highlighting for technical content
-- **Categories & Tags** - Content organization and filtering
-- **Search** - Find articles by keywords
-- **Reading Time** - Estimated reading duration
-- **Social Sharing** - Share articles on social platforms
+### ✅ Content Management
+- **Markdown Support** - Full markdown parsing with frontmatter metadata
+- **Relationships** - Automatic connection detection between content pieces
+- **Sample Content** - Pre-populated with example articles, projects, skills, and experiences
+- **API Integration** - Client-server architecture with `/api/graph` endpoint
 
-#### Projects Portfolio
-- **Project Gallery** - Grid/list view of projects
-- **Live Demos** - Links to working applications
-- **Source Code** - GitHub repository links
-- **Tech Stack Display** - Technologies used in each project
-- **Project Details** - Comprehensive project descriptions
-- **Image Galleries** - Screenshots and project visuals
-
-#### Resume Section
-- **Interactive Timeline** - Visual career progression
-- **Skills Matrix** - Technical and soft skills display
-- **PDF Download** - Professional resume download
-- **Print Friendly** - Optimized for printing
-- **Contact Integration** - Direct contact options
-- **Recommendations** - Professional endorsements
-
-### Technical Features
-- **Responsive Design** - Mobile-first, works on all devices
-- **Fast Loading** - Optimized performance and loading times
-- **SEO Optimized** - Search engine friendly structure
-- **Accessibility** - WCAG compliant design
-- **Dark/Light Mode** - User preference support
+### ✅ Technical Implementation
+- **Responsive Design** - Mobile-first with responsive navigation and layouts
+- **TypeScript** - Full type safety across components and data structures
+- **Performance** - Optimized builds with code splitting and lazy loading
+- **Developer Experience** - Hot reload, proxy support for corporate networks
+- **Production Ready** - Built and tested, ready for Vercel deployment
 
 ## Development Workflow
 
@@ -253,25 +348,28 @@ git push origin feature/new-feature
 - **Achievements** - Awards, recognitions, and milestones
 - **Volunteer work** - Community involvement and contributions
 
-## Deployment
+## 🚀 Deployment
 
-### Hosting Options
-- **Static Hosting:** GitHub Pages, Netlify, Vercel
-- **CDN Integration:** CloudFlare for performance
-- **Domain:** monib.life (custom domain setup)
-- **SSL:** HTTPS enabled for security
+### Ready for Production
+The website is complete and ready for deployment to:
+- **Vercel** (Recommended) - Automatic deployments from GitHub
+- **Netlify** - Static site hosting with form handling
+- **GitHub Pages** - Free hosting for public repositories
 
-### Environment Setup
+### Build & Deploy
 ```bash
-# Development
-npm run dev
-
-# Build for production
+# Test production build locally
 npm run build
+npm run start
 
-# Deploy (method dependent on hosting choice)
-npm run deploy
+# Deploy to Vercel
+npx vercel
+
+# Or connect GitHub repo to Vercel for auto-deployment
 ```
+
+### Environment Variables
+No environment variables required - the site uses static generation and client-side API routes.
 
 ## Performance Goals
 
@@ -280,19 +378,23 @@ npm run deploy
 - **Core Web Vitals:** Pass all metrics
 - **Accessibility Score:** WCAG AA compliance
 
-## Maintenance
+## 🔧 Customization & Maintenance
 
-### Regular Tasks
-- Content updates and new blog posts
-- Dependency updates and security patches
-- Performance monitoring and optimization
-- SEO updates and improvements
+### Adding Your Content
+1. **Replace sample content** in `/content/` folders with your actual:
+   - Articles in `/content/thoughts/`
+   - Projects in `/content/projects/`
+   - Resume data in `/content/resume/resume-data.json`
 
-### Monitoring
-- Analytics setup (Google Analytics or privacy-focused alternative)
-- Performance monitoring
-- Uptime monitoring
-- User feedback collection
+2. **Update graph connections** by adding `connections` arrays to frontmatter
+
+3. **Customize styling** in `/src/app/globals.css` and component files
+
+### Regular Maintenance
+- **Content updates** - Add new thoughts, projects, and experiences
+- **Dependencies** - Keep packages updated with `npm update`
+- **Performance** - Monitor with Lighthouse and Core Web Vitals
+- **SEO** - Update meta tags and Open Graph data
 
 ---
 
@@ -306,5 +408,5 @@ This project follows the collaboration model documented in `AGENTS.md`. All cont
 
 ---
 
-**Last Updated:** November 13, 2025
-**Project Status:** Initial setup and planning phase
+**Last Updated:** November 13, 2025  
+**Project Status:** ✅ **Complete Implementation** - Fully functional website with interactive graph visualization
