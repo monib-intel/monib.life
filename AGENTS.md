@@ -169,6 +169,50 @@ For future changes, please use this format:
 5. Changes are committed with clear attribution
 6. This document is updated to reflect all contributions
 
+## Development Environment
+
+### System Setup for AI Agents
+Agents working on this project should be aware of the development environment:
+
+**Operating System:** 
+- WSL2 (Windows Subsystem for Linux) running Debian-based distribution
+- Primary shell: Zsh with Starship prompt
+- Configuration managed via ~/wsl-config repository
+
+**Package Management:**
+- **System packages:** APT (Debian package manager) 
+- **Development packages:** Nix package manager for reproducible environments
+- **Node.js packages:** npm/yarn for JavaScript dependencies
+- **Proxy configuration:** Intel corporate network proxy (http://proxy-us.intel.com:912)
+
+**Development Tools Available:**
+- Git with proxy configuration
+- Node.js and npm (installable via Nix)
+- VS Code as primary editor
+- Zsh with comprehensive aliases (~/wsl-config/aliases)
+- Starship prompt for enhanced shell experience
+
+**Key Considerations for Agents:**
+- All network requests must use proxy configuration
+- Nix can be used for installing development dependencies
+- Shell commands should use Zsh syntax and available aliases
+- File paths use Unix-style notation (WSL translates Windows paths)
+
+### Installation Commands Reference
+```bash
+# Install Node.js via Nix
+nix-env -iA nixpkgs.nodejs
+
+# Install packages with npm (proxy-aware)
+npm install <package>
+
+# Quick navigation (available aliases)
+proj        # Navigate to ~/projects
+config      # Navigate to ~/wsl-config
+md <dir>    # Create directory with parents (mkdir -p)
+ll          # Detailed file listing (ls -la)
+```
+
 ## Guidelines for Future Development
 
 ### Agent Responsibilities
@@ -178,6 +222,8 @@ For future changes, please use this format:
 - Suggest improvements and optimizations
 - Handle build processes and tooling
 - Ensure code quality and best practices
+- **Use Nix for reproducible dependency management**
+- **Respect proxy configurations in all network operations**
 
 ### Human Responsibilities
 - Define project vision and requirements

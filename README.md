@@ -16,22 +16,72 @@ The site serves as both a professional portfolio and a platform for sharing idea
 
 ### Prerequisites
 - Node.js (v18 or higher recommended)
-- npm or yarn package manager
+- npm or yarn package manager  
 - Git for version control
 - Modern web browser for testing
+
+### Development Environment
+This project is developed in a **WSL2 (Debian) + Nix** environment:
+
+**System Setup:**
+- WSL2 with Debian-based distribution
+- Zsh shell with Starship prompt
+- Nix package manager for reproducible environments
+- Intel corporate proxy configuration
+- Configuration managed via ~/wsl-config repository
+
+**Package Management Options:**
+```bash
+# Option 1: Install Node.js via Nix (recommended for reproducibility)
+nix-env -iA nixpkgs.nodejs
+nix-shell -p nodejs npm  # Temporary shell with Node.js
+
+# Option 2: Use system Node.js (if already installed)
+node --version
+npm --version
+
+# Option 3: Use Nix shell for project development
+nix-shell -p nodejs npm yarn
+```
+
+**Proxy Considerations:**
+All network requests automatically use proxy configuration:
+- HTTP/HTTPS proxy: http://proxy-us.intel.com:912
+- Git operations proxy-aware
+- npm/yarn operations proxy-aware
 
 ### Getting Started
 
 ```bash
+# Navigate to projects directory (using configured alias)
+proj
+
 # Clone the repository (if using git)
 git clone <repository-url>
 cd monib.life
+
+# Set up development environment with Nix (recommended)
+nix-shell -p nodejs npm yarn
+
+# OR install Node.js globally via Nix
+nix-env -iA nixpkgs.nodejs
 
 # Install dependencies (when package.json is created)
 npm install
 
 # Start development server (framework dependent)
 npm run dev
+```
+
+**Available Shell Aliases:**
+```bash
+proj        # cd ~/projects
+config      # cd ~/wsl-config  
+md <dir>    # mkdir -p <dir>
+ll          # ls -la
+gs          # git status
+ga          # git add
+gc          # git commit
 ```
 
 ## Tech Stack
