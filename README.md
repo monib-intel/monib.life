@@ -65,25 +65,6 @@ npm run dev
 # Open http://localhost:3000 in your browser
 ```
 
-### Proxy Configuration
-
-If you're behind a corporate firewall, configure npm proxy settings:
-
-```bash
-# Set npm proxy configuration
-npm config set proxy http://proxy-us.intel.com:912
-npm config set https-proxy http://proxy-us.intel.com:912
-npm config set registry https://registry.npmjs.org/
-
-# Alternative: Set environment variables
-export HTTP_PROXY=http://proxy-us.intel.com:912
-export HTTPS_PROXY=http://proxy-us.intel.com:912
-export NO_PROXY=localhost,127.0.0.1
-
-# Verify proxy settings
-npm config list
-```
-
 ### Available Scripts
 
 ```bash
