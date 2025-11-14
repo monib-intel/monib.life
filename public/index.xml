@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+    <channel>
+      <title>Quartz 4</title>
+      <link>https://quartz.jzhao.xyz</link>
+      <description>Last 10 notes on Quartz 4</description>
+      <generator>Quartz -- quartz.jzhao.xyz</generator>
+      <item>
+    <title>Resume &amp; Professional Background</title>
+    <link>https://quartz.jzhao.xyz/resume/</link>
+    <guid>https://quartz.jzhao.xyz/resume/</guid>
+    <description><![CDATA[ Monib Ahmed - Software Engineer Professional Experience Software Engineer | Technology Company Building scalable web applications and leading technical initiatives Key Responsibilities Full-stack development with modern web technologies Architecture design for scalable applications Mentoring and tec... ]]></description>
+    <pubDate>Fri, 14 Nov 2025 16:07:39 GMT</pubDate>
+  </item><item>
+    <title>Projects &amp; Portfolio</title>
+    <link>https://quartz.jzhao.xyz/projects/</link>
+    <guid>https://quartz.jzhao.xyz/projects/</guid>
+    <description><![CDATA[ Projects &amp; Portfolio A showcase of technical work, experiments, and professional contributions. ]]></description>
+    <pubDate>Fri, 14 Nov 2025 16:07:29 GMT</pubDate>
+  </item><item>
+    <title>Thoughts &amp; Articles</title>
+    <link>https://quartz.jzhao.xyz/thoughts/</link>
+    <guid>https://quartz.jzhao.xyz/thoughts/</guid>
+    <description><![CDATA[ Thoughts &amp; Articles Welcome to my collection of thoughts, insights, and reflections on technology, development, and more. ]]></description>
+    <pubDate>Fri, 14 Nov 2025 16:07:22 GMT</pubDate>
+  </item><item>
+    <title>Welcome to My Digital Garden</title>
+    <link>https://quartz.jzhao.xyz/thoughts/welcome-to-digital-garden</link>
+    <guid>https://quartz.jzhao.xyz/thoughts/welcome-to-digital-garden</guid>
+    <description><![CDATA[ An introduction to this interconnected space where thoughts, projects, and experiences come together. ]]></description>
+    <pubDate>Wed, 15 Jan 2025 08:00:00 GMT</pubDate>
+  </item><item>
+    <title>Personal Website with Interactive Graph</title>
+    <link>https://quartz.jzhao.xyz/projects/personal-website-graph</link>
+    <guid>https://quartz.jzhao.xyz/projects/personal-website-graph</guid>
+    <description><![CDATA[ A modern personal website built with Next.js featuring an interactive knowledge graph to explore connections between content. ]]></description>
+    <pubDate>Fri, 10 Jan 2025 08:00:00 GMT</pubDate>
+  </item><item>
+    <title>Building Scalable Web Applications with Next.js</title>
+    <link>https://quartz.jzhao.xyz/thoughts/building-scalable-nextjs-apps</link>
+    <guid>https://quartz.jzhao.xyz/thoughts/building-scalable-nextjs-apps</guid>
+    <description><![CDATA[ Lessons learned from building production web applications with Next.js, focusing on performance, SEO, and developer experience. ]]></description>
+    <pubDate>Sun, 05 Jan 2025 08:00:00 GMT</pubDate>
+  </item><item>
+    <title>React Component Library with Storybook</title>
+    <link>https://quartz.jzhao.xyz/projects/react-component-library</link>
+    <guid>https://quartz.jzhao.xyz/projects/react-component-library</guid>
+    <description><![CDATA[ A reusable React component library built with TypeScript, Storybook, and comprehensive testing for design system consistency. ]]></description>
+    <pubDate>Wed, 20 Nov 2024 08:00:00 GMT</pubDate>
+  </item><item>
+    <title>Welcome to monib.life</title>
+    <link>https://quartz.jzhao.xyz/</link>
+    <guid>https://quartz.jzhao.xyz/</guid>
+    <description><![CDATA[ Welcome to My Digital Garden This is my digital garden - a space where thoughts, projects, and experiences connect naturally. ]]></description>
+    <pubDate>Wed, 23 Aug 2023 19:09:04 GMT</pubDate>
+  </item>
+    </channel>
+  </rss>

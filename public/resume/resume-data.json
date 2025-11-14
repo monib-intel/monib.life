@@ -1,0 +1,158 @@
+{
+  "personal": {
+    "name": "Monib Ahmed",
+    "title": "Software Engineer & Developer",
+    "email": "contact@monib.life",
+    "website": "https://monib.life",
+    "location": "Your Location",
+    "summary": "Passionate software engineer with expertise in full-stack development, system architecture, and modern web technologies. Experienced in building scalable applications and leading development teams.",
+    "connections": ["leadership", "mentoring", "system-design"]
+  },
+  "experience": [
+    {
+      "id": "current-role",
+      "title": "Senior Software Engineer",
+      "company": "Tech Company",
+      "location": "Remote",
+      "startDate": "2023-01",
+      "endDate": null,
+      "description": [
+        "Lead development of scalable web applications serving millions of users",
+        "Architect and implement microservices using Node.js, Python, and cloud technologies",
+        "Mentor junior developers and establish best practices for code quality",
+        "Collaborate with cross-functional teams to deliver features on schedule"
+      ],
+      "skills": ["JavaScript", "TypeScript", "Node.js", "React", "Python", "AWS", "Docker"],
+      "achievements": [
+        "Improved application performance by 40% through optimization",
+        "Led migration to microservices architecture",
+        "Mentored 5+ junior developers"
+      ],
+      "connections": ["react-development", "system-architecture", "mentoring", "aws-cloud"]
+    },
+    {
+      "id": "previous-role",
+      "title": "Full Stack Developer",
+      "company": "Previous Company",
+      "location": "City, State",
+      "startDate": "2021-06",
+      "endDate": "2022-12",
+      "description": [
+        "Built responsive web applications using React, Node.js, and PostgreSQL",
+        "Implemented CI/CD pipelines and automated testing frameworks",
+        "Worked closely with designers to create pixel-perfect user interfaces",
+        "Participated in agile development processes and sprint planning"
+      ],
+      "skills": ["React", "Node.js", "PostgreSQL", "Git", "Docker", "Jest"],
+      "achievements": [
+        "Delivered 15+ features with zero production bugs",
+        "Reduced build time by 60% through CI/CD optimization",
+        "Implemented comprehensive test coverage (90%+)"
+      ],
+      "connections": ["react-development", "postgresql", "ci-cd", "testing"]
+    }
+  ],
+  "skills": [
+    {
+      "id": "javascript",
+      "name": "JavaScript",
+      "category": "technical",
+      "level": 5,
+      "years": 6,
+      "endorsed": true,
+      "connections": ["react-development", "node-js", "web-development"]
+    },
+    {
+      "id": "typescript",
+      "name": "TypeScript", 
+      "category": "technical",
+      "level": 5,
+      "years": 4,
+      "endorsed": true,
+      "connections": ["react-development", "node-js", "type-safety"]
+    },
+    {
+      "id": "react",
+      "name": "React",
+      "category": "framework",
+      "level": 5,
+      "years": 5,
+      "endorsed": true,
+      "connections": ["javascript", "frontend-development", "component-architecture"]
+    },
+    {
+      "id": "nodejs",
+      "name": "Node.js",
+      "category": "technical",
+      "level": 4,
+      "years": 4,
+      "endorsed": true,
+      "connections": ["javascript", "backend-development", "api-development"]
+    },
+    {
+      "id": "python",
+      "name": "Python",
+      "category": "technical", 
+      "level": 4,
+      "years": 3,
+      "endorsed": false,
+      "connections": ["data-science", "automation", "backend-development"]
+    },
+    {
+      "id": "aws",
+      "name": "AWS",
+      "category": "tool",
+      "level": 3,
+      "years": 2,
+      "endorsed": true,
+      "connections": ["cloud-computing", "devops", "scalability"]
+    },
+    {
+      "id": "leadership",
+      "name": "Technical Leadership",
+      "category": "soft",
+      "level": 4,
+      "years": 3,
+      "endorsed": true,
+      "connections": ["mentoring", "project-management", "team-building"]
+    },
+    {
+      "id": "system-design",
+      "name": "System Design",
+      "category": "technical",
+      "level": 4,
+      "years": 4,
+      "endorsed": true,
+      "connections": ["architecture", "scalability", "performance-optimization"]
+    }
+  ],
+  "education": [
+    {
+      "id": "university",
+      "degree": "Bachelor of Science in Computer Science",
+      "institution": "University Name",
+      "location": "City, State",
+      "graduationDate": "2020-05",
+      "gpa": "3.8",
+      "honors": ["Magna Cum Laude", "Dean's List"],
+      "relevant": ["Data Structures", "Algorithms", "Software Engineering", "Database Systems"]
+    }
+  ],
+  "projects": [
+    {
+      "id": "personal-website",
+      "title": "Interactive Personal Website",
+      "description": "Built this website with Next.js and React Flow to create an interactive knowledge graph",
+      "technologies": ["Next.js", "React", "TypeScript", "D3.js"],
+      "connections": ["react-development", "graph-visualization", "personal-branding"]
+    }
+  ],
+  "certifications": [
+    {
+      "name": "AWS Solutions Architect",
+      "issuer": "Amazon Web Services",
+      "date": "2023-08",
+      "id": "aws-cert-123"
+    }
+  ]
+}
