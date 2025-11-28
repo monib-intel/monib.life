@@ -27,7 +27,7 @@ test:
 	@test -f quartz.config.ts || (echo "Error: quartz.config.ts not found" && exit 1)
 	@test -f package.json || (echo "Error: package.json not found" && exit 1)
 	@test -d vault || (echo "Error: vault directory not found" && exit 1)
-	@test -d vault/.obsidian || (echo "Warning: vault/.obsidian directory not found")
+	@test -d vault/.obsidian || echo "Warning: vault/.obsidian directory not found"
 	@echo "Validating vault content..."
 	@test -f vault/index.md || (echo "Error: vault/index.md not found" && exit 1)
 	@echo "Checking scripts..."
@@ -50,8 +50,9 @@ sync:
 # Deploy to production (placeholder - customize based on deployment target)
 deploy: build
 	@echo "Deploying to production..."
-	@echo "Note: Configure deployment target in Makefile or use 'nix run .#deploy'"
-	@echo "Deployment complete!"
+	@echo "Note: Deployment target not yet configured."
+	@echo "Configure this target for your deployment method or use 'nix run .#deploy'"
+	@echo "See README.md for deployment options (Netlify, Vercel, Cloudflare Pages, NixOS)."
 
 # Show help
 help:
@@ -66,7 +67,7 @@ help:
 	@echo "  test       Run tests and validate configuration"
 	@echo "  clean      Remove build artifacts and node_modules"
 	@echo "  sync       Sync external project documentation"
-	@echo "  deploy     Build and deploy to production"
+	@echo "  deploy     Build and deploy to production (placeholder)"
 	@echo "  help       Show this help message"
 	@echo ""
 	@echo "Examples:"
