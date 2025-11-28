@@ -80,6 +80,34 @@ npx quartz build
 npx quartz serve
 ```
 
+## Make Commands
+
+The project includes a Makefile for consistent build operations:
+
+```bash
+make install    # Install dependencies
+make dev        # Start development server with hot reload
+make build      # Build for production
+make test       # Run tests and validate configuration
+make clean      # Clean build artifacts
+make sync       # Sync external project documentation
+make deploy     # Build and deploy to production
+make help       # Show all available commands
+```
+
+### Quick Start with Make
+
+```bash
+# Initial setup
+make install
+
+# Start development
+make dev
+
+# Build for production
+make build
+```
+
 ## Content Workflow
 
 ### Publishing Content
@@ -217,6 +245,7 @@ All content should follow these conventions:
 ```
 monib.life/
 ├── README.md                 # This file
+├── Makefile                  # Build and development commands
 ├── agents.md                 # Assistant integration guide
 ├── flake.nix                 # NixOS development environment & deployment
 ├── flake.lock                # Locked dependencies
