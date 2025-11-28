@@ -1,6 +1,3 @@
 [submodule "vault"]
 	path = vault
 	url = https://github.com/monib-intel/vault.git
-[submodule "reading-assistant"]
-	path = reading-assistant
-	url = https://github.com/monib-intel/reading-bot.git

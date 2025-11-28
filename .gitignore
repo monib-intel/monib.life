@@ -9,3 +9,13 @@ private/
 .replit
 replit.nix
 .direnv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Reading assistant - ignore uploaded books and logs but keep directories
+reading-assistant/books/*
+!reading-assistant/books/.gitkeep
+reading-assistant/logs/*
+!reading-assistant/logs/.gitkeep
