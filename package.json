@@ -1,0 +1,19 @@
+{
+  "name": "monib.life",
+  "version": "1.0.0",
+  "description": "Personal website built with Quartz",
+  "scripts": {
+    "build": "npx quartz build",
+    "serve": "npx quartz serve",
+    "sync": "./scripts/sync-projects.sh"
+  },
+  "dependencies": {
+    "@jackyzha0/quartz": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": ["quartz", "obsidian", "personal-website"],
+  "author": "monib-intel",
+  "license": "MIT"
+}

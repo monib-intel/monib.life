@@ -1,0 +1,10 @@
+{
+  "projects": [
+    {
+      "name": "example-project",
+      "repo": "monib-intel/example-project",
+      "sync": ["README.md"],
+      "branch": "main"
+    }
+  ]
+}
