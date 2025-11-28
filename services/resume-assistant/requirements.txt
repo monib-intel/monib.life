@@ -1,0 +1,11 @@
+# Resume Assistant Dependencies
+openai>=1.0.0
+anthropic>=0.18.0
+python-dotenv>=1.0.0
+pyyaml>=6.0
+requests>=2.31.0
+
+# Development
+pytest>=7.0.0
+black>=23.0.0
+flake8>=6.0.0
