@@ -9,6 +9,3 @@ private/
 .replit
 replit.nix
 .direnv/
-
-# Content is synced from vault submodule
-content/
