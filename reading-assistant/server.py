@@ -206,8 +206,8 @@ def api_books_delete(filename):
 def api_process_books():
     """Trigger book processing.
 
-    This endpoint would integrate with the reading-bot for book processing.
-    Currently returns a placeholder response.
+    Processes EPUB/PDF books using the reading-assistant to generate
+    Inspectional Reading summaries in the content/BookSummaries directory.
     """
     data = request.get_json() or {}
     book_name = data.get('book')
@@ -219,24 +219,87 @@ def api_process_books():
             return jsonify({'error': 'Book not found'}), 404
 
         logger.info(f"Processing book: {book_name}")
-        # TODO: Integrate with reading-bot for actual processing
-        return jsonify({
-            'message': f'Processing started for: {book_name}',
-            'status': 'pending',
-            'note': 'Reading-bot integration pending'
-        })
+        
+        # Run the reading-assistant process_epub.py script
+        try:
+            output_dir = CONTENT_DIR / "BookSummaries"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            
+            result = subprocess.run(
+                ['python', 'process_epub.py', str(filepath), '--extract', '--summary', '-o', str(output_dir)],
+                cwd=BASE_DIR,
+                capture_output=True,
+                text=True,
+                timeout=600  # 10 minutes timeout
+            )
+            
+            if result.returncode == 0:
+                logger.info(f"Successfully processed book: {book_name}")
+                return jsonify({
+                    'message': f'Book processed successfully: {book_name}',
+                    'status': 'completed',
+                    'output': result.stdout[-500:] if result.stdout else ''
+                })
+            else:
+                logger.error(f"Failed to process book {book_name}: {result.stderr}")
+                return jsonify({
+                    'error': 'Processing failed',
+                    'details': result.stderr[-500:] if result.stderr else ''
+                }), 500
+                
+        except subprocess.TimeoutExpired:
+            logger.error(f"Processing timed out for book: {book_name}")
+            return jsonify({'error': 'Processing timed out (10 minutes)'}), 500
+        except Exception as e:
+            logger.error(f"Error processing book {book_name}: {str(e)}")
+            return jsonify({'error': str(e)}), 500
     else:
         # Process all unprocessed books
         books = get_book_list()
         unprocessed = [b for b in books if not b['processed']]
 
+        if not unprocessed:
+            return jsonify({
+                'message': 'No unprocessed books found',
+                'books': []
+            })
+
         logger.info(f"Processing {len(unprocessed)} unprocessed books")
-        # TODO: Integrate with reading-bot for actual processing
+        
+        processed_count = 0
+        failed_books = []
+        
+        for book in unprocessed:
+            try:
+                filepath = BOOKS_DIR / book['name']
+                output_dir = CONTENT_DIR / "BookSummaries"
+                output_dir.mkdir(parents=True, exist_ok=True)
+                
+                result = subprocess.run(
+                    ['python', 'process_epub.py', str(filepath), '--extract', '--summary', '-o', str(output_dir)],
+                    cwd=BASE_DIR,
+                    capture_output=True,
+                    text=True,
+                    timeout=600
+                )
+                
+                if result.returncode == 0:
+                    processed_count += 1
+                    logger.info(f"Successfully processed: {book['name']}")
+                else:
+                    failed_books.append(book['name'])
+                    logger.error(f"Failed to process: {book['name']}")
+                    
+            except Exception as e:
+                failed_books.append(book['name'])
+                logger.error(f"Error processing {book['name']}: {str(e)}")
+        
         return jsonify({
-            'message': f'Processing started for {len(unprocessed)} books',
-            'books': [b['name'] for b in unprocessed],
-            'status': 'pending',
-            'note': 'Reading-bot integration pending'
+            'message': f'Processed {processed_count} of {len(unprocessed)} books',
+            'processed': processed_count,
+            'failed': len(failed_books),
+            'failed_books': failed_books,
+            'status': 'completed'
         })
 
 
