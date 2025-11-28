@@ -45,10 +45,17 @@ app = Flask(__name__, static_folder='admin', static_url_path='/admin')
 
 
 def get_admin_password():
-    """Get admin password from environment variable."""
+    """Get admin password from environment variable.
+
+    For production use, always set ADMIN_PASSWORD environment variable.
+    The default 'admin' password is only for local development.
+    """
     password = os.environ.get('ADMIN_PASSWORD', '')
     if not password:
-        logger.warning("ADMIN_PASSWORD not set. Using default 'admin' for development.")
+        logger.warning(
+            "ADMIN_PASSWORD not set. Using default 'admin' for development. "
+            "Set ADMIN_PASSWORD environment variable for production."
+        )
         return 'admin'
     return password
 
@@ -60,7 +67,8 @@ def require_auth(f):
         auth = request.authorization
         password = get_admin_password()
 
-        if not auth or auth.password != password:
+        # Validate that username is 'admin' and password matches
+        if not auth or auth.username != 'admin' or auth.password != password:
             return Response(
                 'Authentication required',
                 401,
@@ -237,10 +245,12 @@ def api_process_books():
 def api_sync_vault():
     """Trigger vault sync."""
     try:
-        sync_script = PROJECT_ROOT / "scripts" / "sync-vault.sh"
-
-        if not sync_script.exists():
+        # Use absolute path and validate it's within project
+        sync_script = (PROJECT_ROOT / "scripts" / "sync-vault.sh").resolve()
+        if not sync_script.is_file():
             return jsonify({'error': 'Sync script not found'}), 500
+        if not str(sync_script).startswith(str(PROJECT_ROOT.resolve())):
+            return jsonify({'error': 'Invalid script path'}), 500
 
         result = subprocess.run(
             ['bash', str(sync_script)],
@@ -275,7 +285,12 @@ def api_sync_vault():
 @require_auth
 def api_build_site():
     """Trigger site rebuild."""
+    import shutil
     try:
+        # Check if npx is available
+        if not shutil.which('npx'):
+            return jsonify({'error': 'npx not found. Please install Node.js'}), 500
+
         result = subprocess.run(
             ['npx', 'quartz', 'build'],
             cwd=PROJECT_ROOT,

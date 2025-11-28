@@ -390,6 +390,13 @@
             setTimeout(() => msg.classList.remove('show'), 5000);
         }
 
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         // Format file size
         function formatSize(bytes) {
             if (bytes < 1024) return bytes + ' B';
@@ -436,21 +443,25 @@
                     return;
                 }
 
-                list.innerHTML = data.books.map(book => `
+                // Use data attributes for event handlers to prevent XSS
+                list.innerHTML = data.books.map(book => {
+                    const safeName = escapeHtml(book.name);
+                    const encodedName = encodeURIComponent(book.name);
+                    return `
                     <div class="book-item">
                         <div class="book-info">
-                            <div class="book-name">${book.name}</div>
+                            <div class="book-name">${safeName}</div>
                             <div class="book-meta">${formatSize(book.size)} • ${formatDate(book.uploaded)}</div>
                         </div>
                         <span class="book-status ${book.processed ? 'processed' : 'pending'}">
                             ${book.processed ? '✓ Processed' : '⏳ Pending'}
                         </span>
                         <div class="book-actions">
-                            <button class="btn btn-sm btn-secondary" onclick="processBook('${book.name}')">Process</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteBook('${book.name}')">×</button>
+                            <button class="btn btn-sm btn-secondary" data-book="${safeName}" onclick="processBook(this.dataset.book)">Process</button>
+                            <button class="btn btn-sm btn-danger" data-book="${safeName}" onclick="deleteBook(this.dataset.book)">×</button>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
             } catch (e) {
                 console.error('Failed to load books:', e);
                 document.getElementById('book-list').innerHTML =
