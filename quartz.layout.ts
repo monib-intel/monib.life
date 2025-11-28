@@ -38,7 +38,25 @@ export const defaultContentPageLayout: PageLayout = {
         { Component: Component.ReaderMode() },
       ],
     }),
-    Component.Explorer(),
+    Component.Explorer({
+      title: "Explorer",
+      folderClickBehavior: "collapse",
+      folderDefaultState: "collapsed",
+      useSavedState: true,
+      sortFn: (a, b) => {
+        // Sort by title if available, otherwise by file name
+        const aTitle = a.file?.frontmatter?.title || a.displayName
+        const bTitle = b.file?.frontmatter?.title || b.displayName
+        return aTitle.localeCompare(bTitle, undefined, { numeric: true, sensitivity: 'base' })
+      },
+      filterFn: (node) => node.name !== "tags",
+      mapFn: (node) => {
+        // Use the title from frontmatter if available
+        if (node.file && node.file.frontmatter?.title) {
+          node.displayName = node.file.frontmatter.title
+        }
+      },
+    }),
   ],
   right: [
     Component.Graph(),
