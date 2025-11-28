@@ -23,6 +23,9 @@
           pytest
           black
           flake8
+          # Admin server
+          flask
+          werkzeug
         ];
 
         python = pkgs.python311.withPackages pythonPackages;
@@ -57,6 +60,8 @@
             echo "  npm run build   - Build the Quartz site"
             echo "  npm run serve   - Run local dev server"
             echo "  npm run sync    - Sync external projects"
+            echo "  make admin-dev  - Start admin + Quartz dev servers"
+            echo "  make help       - Show all available commands"
           '';
         };
 

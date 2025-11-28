@@ -30,6 +30,45 @@ make build
 - `public/` - Static assets
 - `Makefile` - Build commands
 
+## Admin Interface
+
+A hidden admin interface is available for managing book uploads and processing:
+
+```bash
+# Start admin server only (port 3000)
+make admin-server
+
+# Start admin + Quartz dev server (recommended)
+make admin-dev
+
+# Add a book manually
+make add-book FILE=path/to/book.epub
+
+# Process all books in queue
+make process-books
+```
+
+**Access:** http://localhost:3000 (or your local IP for mobile access)  
+**Credentials:** Username: `admin` / Password: `admin` (set `ADMIN_PASSWORD` env var for production)
+
+### Features
+- 📤 Upload EPUB/PDF books via web interface or mobile
+- 🤖 AI-powered Inspectional Reading summaries
+- 📋 Book queue management
+- 🔄 Vault sync and site rebuild controls
+- 📊 Live logs viewer
+
+### Testing Book Processing
+
+Test book processing without API calls:
+
+```bash
+cd reading-assistant
+python test_book_processing.py books/your-book.epub ../content/BookSummaries
+```
+
+This validates EPUB conversion, metadata extraction, and output generation without requiring API access.
+
 ## Submodules
 
 This project uses git submodules:
