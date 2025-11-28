@@ -1,18 +1,22 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
+    "lib": ["esnext", "DOM", "DOM.Iterable"],
+    "experimentalDecorators": true,
+    "module": "esnext",
+    "target": "esnext",
     "moduleResolution": "node",
-    "esModuleInterop": true,
     "strict": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "./dist"
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
   },
-  "include": ["quartz.config.ts", "quartz/**/*"],
-  "exclude": ["node_modules", "public"]
+  "include": ["**/*.ts", "**/*.tsx", "./package.json"],
+  "exclude": ["build/**/*.d.ts"]
 }

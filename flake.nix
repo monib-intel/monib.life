@@ -10,7 +10,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        
+
         pythonPackages = ps: with ps; [
           # Common packages for assistants
           requests
@@ -24,29 +24,30 @@
           black
           flake8
         ];
-        
+
         python = pkgs.python311.withPackages pythonPackages;
-        
+
       in {
         devShells.default = pkgs.mkShell {
           buildInputs = [
-            # Node.js for Quartz
-            pkgs.nodejs_20
+            # Node.js for Quartz (v22 required for Quartz v4.5+)
+            pkgs.nodejs_22
             pkgs.nodePackages.npm
-            
+
             # Python for assistants
             python
-            
+
             # Build tools
+            pkgs.gnumake
             pkgs.jq
             pkgs.curl
             pkgs.git
-            
+
             # Optional: for PDF generation
             pkgs.pandoc
             pkgs.texliveSmall
           ];
-          
+
           shellHook = ''
             echo "monib.life development environment loaded"
             echo "Node.js: $(node --version)"
@@ -58,22 +59,22 @@
             echo "  npm run sync    - Sync external projects"
           '';
         };
-        
+
         packages.default = pkgs.stdenv.mkDerivation {
           pname = "monib-life";
           version = "1.0.0";
           src = ./.;
-          
+
           buildInputs = [
             pkgs.nodejs_20
             pkgs.nodePackages.npm
           ];
-          
+
           buildPhase = ''
             npm ci
             npx quartz build
           '';
-          
+
           installPhase = ''
             mkdir -p $out
             cp -r public/* $out/

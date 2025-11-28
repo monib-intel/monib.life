@@ -1,51 +1,11 @@
-# Dependencies
-node_modules/
-
-# Build output
-public/
-.quartz-cache/
-
-# Environment files
-.env
-.env.local
-.env*.local
-
-# OS files
 .DS_Store
-Thumbs.db
-
-# Editor directories
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.Python
-env/
-venv/
-.venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.eggs/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Nix
-result
-result-*
-
-# Temporary files
-*.tmp
-*.temp
-*.log
-
-# Test coverage
-.coverage
-htmlcov/
-.pytest_cache/
+node_modules
+public
+prof
+tsconfig.tsbuildinfo
+.obsidian
+.quartz-cache
+private/
+.replit
+replit.nix
+.direnv/

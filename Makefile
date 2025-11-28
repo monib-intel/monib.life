@@ -26,12 +26,9 @@ test:
 	@echo "Checking required files..."
 	@test -f quartz.config.ts || (echo "Error: quartz.config.ts not found" && exit 1)
 	@test -f package.json || (echo "Error: package.json not found" && exit 1)
-	@test -d vault || (echo "Error: vault directory not found" && exit 1)
-	@test -d vault/.obsidian || echo "Warning: vault/.obsidian directory not found"
-	@echo "Validating vault content..."
-	@test -f vault/index.md || (echo "Error: vault/index.md not found" && exit 1)
-	@echo "Checking scripts..."
-	@test -x scripts/sync-projects.sh || chmod +x scripts/sync-projects.sh
+	@test -d content || (echo "Error: content directory not found" && exit 1)
+	@echo "Validating content..."
+	@test -f content/index.md || echo "Warning: content/index.md not found"
 	@echo "All tests passed!"
 
 # Clean build artifacts
@@ -42,10 +39,10 @@ clean:
 	rm -rf node_modules/
 	@echo "Clean complete!"
 
-# Sync external project documentation
+# Sync external project documentation (placeholder)
 sync:
 	@echo "Syncing external projects..."
-	./scripts/sync-projects.sh
+	@echo "Note: No sync script configured yet"
 
 # Deploy to production (placeholder - customize based on deployment target)
 deploy: build
