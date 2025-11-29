@@ -20,6 +20,7 @@ Environment Variables:
 import os
 import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from string import Template
 
 
 class PlaceholderHandler(BaseHTTPRequestHandler):
@@ -31,7 +32,7 @@ class PlaceholderHandler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.end_headers()
 
-        html = """<!DOCTYPE html>
+        html_template = Template("""<!DOCTYPE html>
 <html>
 <head>
     <title>Reading Assistant - Coming Soon</title>
@@ -67,12 +68,13 @@ class PlaceholderHandler(BaseHTTPRequestHandler):
         <li>Vault sync controls</li>
     </ul>
     <p>
-        <small>Server running on port %s</small>
+        <small>Server running on port $port</small>
     </p>
 </body>
-</html>"""
+</html>""")
         port = os.environ.get("PORT", "3000")
-        self.wfile.write(html.replace("%s", port).encode())
+        html = html_template.substitute(port=port)
+        self.wfile.write(html.encode())
 
     def log_message(self, format, *args):
         """Log requests to stdout."""
@@ -81,7 +83,7 @@ class PlaceholderHandler(BaseHTTPRequestHandler):
 
 def main():
     """Start the placeholder server."""
-    port = int(os.environ.get("PORT", 3000))
+    port = int(os.environ.get("PORT", "3000"))
 
     print("=" * 60)
     print("Reading Assistant - Placeholder Server")
