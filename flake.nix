@@ -45,6 +45,7 @@
             pkgs.jq
             pkgs.curl
             pkgs.git
+            pkgs.rsync
 
             # Optional: for PDF generation
             pkgs.pandoc
@@ -57,9 +58,9 @@
             echo "Python: $(python --version)"
             echo ""
             echo "Available commands:"
-            echo "  npm run build   - Build the Quartz site"
-            echo "  npm run serve   - Run local dev server"
-            echo "  npm run sync    - Sync external projects"
+            echo "  make install    - Install dependencies and update submodules"
+            echo "  make dev        - Sync vault and start dev server"
+            echo "  make build      - Sync vault and build site"
             echo "  make admin-dev  - Start admin + Quartz dev servers"
             echo "  make help       - Show all available commands"
           '';
@@ -71,18 +72,19 @@
           src = ./.;
 
           buildInputs = [
-            pkgs.nodejs_20
+            pkgs.nodejs_22
             pkgs.nodePackages.npm
           ];
 
           buildPhase = ''
+            cd website
             npm ci
             npx quartz build
           '';
 
           installPhase = ''
             mkdir -p $out
-            cp -r public/* $out/
+            cp -r website/public/* $out/
           '';
         };
       }

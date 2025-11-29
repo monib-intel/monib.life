@@ -1,10 +1,10 @@
 .DS_Store
-node_modules
-public
 prof
-tsconfig.tsbuildinfo
 .obsidian
-.quartz-cache
+.replit
+replit.nix
+.direnv/
+
 # Private directory - structure tracked, content ignored
 !private/
 !private/README.md
@@ -16,9 +16,6 @@ private/books/**/*.pdf
 private/books/**/*.mobi
 private/books/**/*.azw
 private/books/**/*.azw3
-.replit
-replit.nix
-.direnv/
 
 # Python cache
 __pycache__/
@@ -31,3 +28,11 @@ reading-assistant/
 services/reading-assistant/
 services/admin-api/
 services/resume-assistant/
+
+# Website submodule - build artifacts and dependencies
+# Note: website/ itself is a submodule, but we need to ignore its build outputs
+# when developing locally before full submodule setup
+website/node_modules/
+website/public/
+website/.quartz-cache/
+website/tsconfig.tsbuildinfo
