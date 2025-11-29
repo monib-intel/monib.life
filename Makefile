@@ -93,9 +93,12 @@ process-books:
 	@echo "Processing books in queue..."
 	@echo "Note: Full reading-bot integration pending"
 	@echo "Books in queue:"
-	@ls -la private/books/uploads/ 2>/dev/null || echo "No uploaded books"
-	@ls -la private/books/manual/ 2>/dev/null | grep -E '\.(epub|pdf|mobi|azw)' || echo "No manual books"
-	@ls -la private/books/api/ 2>/dev/null | grep -E '\.(epub|pdf|mobi|azw)' || echo "No API books"
+	@echo "Uploads:"
+	@find private/books/uploads -maxdepth 1 -type f \( -name "*.epub" -o -name "*.pdf" -o -name "*.mobi" -o -name "*.azw" -o -name "*.azw3" \) 2>/dev/null | grep . || echo "  (none)"
+	@echo "Manual:"
+	@find private/books/manual -maxdepth 1 -type f \( -name "*.epub" -o -name "*.pdf" -o -name "*.mobi" -o -name "*.azw" -o -name "*.azw3" \) 2>/dev/null | grep . || echo "  (none)"
+	@echo "API:"
+	@find private/books/api -maxdepth 1 -type f \( -name "*.epub" -o -name "*.pdf" -o -name "*.mobi" -o -name "*.azw" -o -name "*.azw3" \) 2>/dev/null | grep . || echo "  (none)"
 
 # Show help
 help:
