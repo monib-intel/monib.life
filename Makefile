@@ -31,6 +31,8 @@ test:
 	@test -d content || (echo "Error: content directory not found" && exit 1)
 	@echo "Validating content..."
 	@test -f content/index.md || echo "Warning: content/index.md not found"
+	@echo "Running integration tests..."
+	npm test
 	@echo "All tests passed!"
 
 # Clean build artifacts
