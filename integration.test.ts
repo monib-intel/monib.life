@@ -235,9 +235,10 @@ describe("GitHub Workflow Tests", () => {
 
 describe("Type Safety Tests", () => {
   test("integration.test.ts should not have syntax errors", () => {
-    // Verify the integration test file itself can be parsed
-    // The full TypeScript check is run via npm run check
-    // but may have pre-existing issues in the repository
+    // Verify the integration test file itself can be parsed.
+    // Note: Full TypeScript type checking (tsc --noEmit) is not run here
+    // because there are pre-existing type errors in the repository (quartz.layout.ts).
+    // The type check is available via `npm run check` which runs `tsc --noEmit`.
     const testFile = path.join(ROOT_DIR, "integration.test.ts")
     assert(fs.existsSync(testFile), "integration.test.ts should exist")
     const content = fs.readFileSync(testFile, "utf-8")
