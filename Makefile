@@ -73,7 +73,7 @@ admin-server:
 	@echo "Starting admin server on port 3000..."
 	@echo "Access at: http://localhost:3000"
 	@echo "Default password: admin (set ADMIN_PASSWORD env var for production)"
-	cd reading-assistant && python server.py
+	cd services/reading-assistant && python server.py
 
 # Start admin server + Quartz dev server (runs both in parallel)
 admin-dev: sync-vault
@@ -81,7 +81,7 @@ admin-dev: sync-vault
 	@echo "Admin UI: http://localhost:3000"
 	@echo "Quartz site: http://localhost:8080"
 	@trap 'kill 0' EXIT; \
-	cd reading-assistant && python server.py & \
+	cd services/reading-assistant && python server.py & \
 	cd $(WEBSITE_DIR) && npx quartz build --serve --port 8080
 
 # Add a book to processing queue
