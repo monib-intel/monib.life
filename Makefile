@@ -84,8 +84,8 @@ ifndef FILE
 endif
 	@echo "Adding book to queue: $(FILE)"
 	@test -f "$(FILE)" || (echo "Error: File not found: $(FILE)" && exit 1)
-	@cp "$(FILE)" reading-assistant/books/
-	@echo "✓ Book added to reading-assistant/books/"
+	@cp "$(FILE)" private/books/manual/
+	@echo "✓ Book added to private/books/manual/"
 	@echo "Run 'make process-books' to process it"
 
 # Process all books in queue
@@ -93,7 +93,12 @@ process-books:
 	@echo "Processing books in queue..."
 	@echo "Note: Full reading-bot integration pending"
 	@echo "Books in queue:"
-	@ls -la reading-assistant/books/ 2>/dev/null || echo "No books in queue"
+	@echo "Uploads:"
+	@find private/books/uploads -maxdepth 1 -type f \( -name "*.epub" -o -name "*.pdf" -o -name "*.mobi" -o -name "*.azw" -o -name "*.azw3" \) 2>/dev/null | grep . || echo "  (none)"
+	@echo "Manual:"
+	@find private/books/manual -maxdepth 1 -type f \( -name "*.epub" -o -name "*.pdf" -o -name "*.mobi" -o -name "*.azw" -o -name "*.azw3" \) 2>/dev/null | grep . || echo "  (none)"
+	@echo "API:"
+	@find private/books/api -maxdepth 1 -type f \( -name "*.epub" -o -name "*.pdf" -o -name "*.mobi" -o -name "*.azw" -o -name "*.azw3" \) 2>/dev/null | grep . || echo "  (none)"
 
 # Show help
 help:

@@ -5,7 +5,17 @@ prof
 tsconfig.tsbuildinfo
 .obsidian
 .quartz-cache
-private/
+# Private directory - structure tracked, content ignored
+!private/
+!private/README.md
+!private/books/
+!private/books/**/
+!private/books/**/.gitkeep
+private/books/**/*.epub
+private/books/**/*.pdf
+private/books/**/*.mobi
+private/books/**/*.azw
+private/books/**/*.azw3
 .replit
 replit.nix
 .direnv/
