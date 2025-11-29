@@ -59,10 +59,6 @@ Book summaries are saved to `vault/BookSummaries/` in Markdown format.
 3. **AI Summarizer**: Generate inspectional reading summaries
 4. **Vault Sync**: Save summaries to Obsidian vault
 
-## Development
-
-See the [admin-api README](../admin-api/README.md) for API documentation.
-
 ## Related
 
 - `private/books/` - Book storage location
