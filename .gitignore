@@ -14,8 +14,10 @@ replit.nix
 __pycache__/
 *.pyc
 
-# Reading assistant - ignore uploaded books and logs but keep directories
-reading-assistant/books/*
-!reading-assistant/books/.gitkeep
-reading-assistant/logs/*
-!reading-assistant/logs/.gitkeep
+# Reading assistant - separate git repo, fully ignored
+reading-assistant/
+
+# Services - each is a separate git repository
+services/reading-assistant/
+services/admin-api/
+services/resume-assistant/
