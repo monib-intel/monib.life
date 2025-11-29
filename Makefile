@@ -84,8 +84,8 @@ ifndef FILE
 endif
 	@echo "Adding book to queue: $(FILE)"
 	@test -f "$(FILE)" || (echo "Error: File not found: $(FILE)" && exit 1)
-	@cp "$(FILE)" reading-assistant/books/
-	@echo "✓ Book added to reading-assistant/books/"
+	@cp "$(FILE)" private/books/manual/
+	@echo "✓ Book added to private/books/manual/"
 	@echo "Run 'make process-books' to process it"
 
 # Process all books in queue
@@ -93,7 +93,9 @@ process-books:
 	@echo "Processing books in queue..."
 	@echo "Note: Full reading-bot integration pending"
 	@echo "Books in queue:"
-	@ls -la reading-assistant/books/ 2>/dev/null || echo "No books in queue"
+	@ls -la private/books/uploads/ 2>/dev/null || echo "No uploaded books"
+	@ls -la private/books/manual/ 2>/dev/null | grep -E '\.(epub|pdf|mobi|azw)' || echo "No manual books"
+	@ls -la private/books/api/ 2>/dev/null | grep -E '\.(epub|pdf|mobi|azw)' || echo "No API books"
 
 # Show help
 help:

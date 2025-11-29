@@ -23,12 +23,30 @@ make build
 
 ## Project Structure
 
+```
+/
+├── vault/               # Obsidian vault (submodule)
+├── content/             # Markdown content (synced from vault)
+├── quartz/              # Quartz framework
+├── public/              # Static assets (build output)
+├── services/            # Backend services (separate repos, gitignored)
+│   ├── admin-api/
+│   └── resume-assistant/
+├── private/             # Sensitive/uploaded content (gitignored)
+│   └── books/
+│       ├── uploads/     # Books uploaded via web interface
+│       ├── manual/      # Books added via make add-book
+│       └── api/         # Books received via API
+├── scripts/             # Build and sync scripts
+├── docs/                # Documentation
+├── Makefile             # Build commands
+└── flake.nix            # Nix development environment
+```
+
+**Key directories:**
 - `vault/` - Obsidian vault (submodule: [monib-intel/vault](https://github.com/monib-intel/vault))
-- `reading-assistant/` - Reading bot assistant (submodule: [monib-intel/reading-bot](https://github.com/monib-intel/reading-bot))
-- `content/` - Markdown content for the website (synced from vault)
-- `quartz/` - Quartz framework
-- `public/` - Static assets
-- `Makefile` - Build commands
+- `private/books/` - Book storage for processing (gitignored content, structure tracked)
+- `services/` - Backend services (each is a separate git repository)
 
 ## Admin Interface
 
@@ -41,7 +59,7 @@ make admin-server
 # Start admin + Quartz dev server (recommended)
 make admin-dev
 
-# Add a book manually
+# Add a book manually (stored in private/books/manual/)
 make add-book FILE=path/to/book.epub
 
 # Process all books in queue
@@ -58,22 +76,19 @@ make process-books
 - 🔄 Vault sync and site rebuild controls
 - 📊 Live logs viewer
 
-### Testing Book Processing
+### Book Storage
 
-Test book processing without API calls:
+Books are stored in `private/books/` with subdirectories for different sources:
+- `uploads/` - Books uploaded via web interface
+- `manual/` - Books added via `make add-book`
+- `api/` - Books received via API
 
-```bash
-cd reading-assistant
-python test_book_processing.py books/your-book.epub ../content/BookSummaries
-```
-
-This validates EPUB conversion, metadata extraction, and output generation without requiring API access.
+The directory structure is tracked in git, but book files are gitignored.
 
 ## Submodules
 
 This project uses git submodules:
-- **vault**: Personal knowledge base and content source
-- **reading-assistant**: AI assistant for generating reading summaries
+- **vault**: Personal knowledge base and content source ([monib-intel/vault](https://github.com/monib-intel/vault))
 
 ## Development
 
