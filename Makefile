@@ -1,6 +1,13 @@
 # Makefile for monib.life - Quartz-based personal website
+#
+# This repository uses submodules for content sources:
+#   - vault/   - Obsidian vault (content source)
+#   - website/ - Quartz website (build system)
 
 .PHONY: all install dev build test clean deploy sync sync-vault help admin-server admin-dev add-book process-books
+
+# Website directory (submodule)
+WEBSITE_DIR := website
 
 # Default target
 all: help
@@ -10,37 +17,37 @@ install:
 	@echo "Installing dependencies..."
 	@echo "Updating submodules..."
 	git submodule update --init --recursive
-	npm install
+	cd $(WEBSITE_DIR) && npm install
 
 # Start development server with hot reload
 dev: sync-vault
 	@echo "Starting development server..."
-	npx quartz build --serve
+	cd $(WEBSITE_DIR) && npx quartz build --serve
 
 # Build for production
 build: sync-vault
 	@echo "Building for production..."
-	npx quartz build
+	cd $(WEBSITE_DIR) && npx quartz build
 
 # Run tests
 test:
 	@echo "Running tests..."
 	@echo "Checking required files..."
-	@test -f quartz.config.ts || (echo "Error: quartz.config.ts not found" && exit 1)
-	@test -f package.json || (echo "Error: package.json not found" && exit 1)
-	@test -d content || (echo "Error: content directory not found" && exit 1)
+	@test -f $(WEBSITE_DIR)/quartz.config.ts || (echo "Error: $(WEBSITE_DIR)/quartz.config.ts not found" && exit 1)
+	@test -f $(WEBSITE_DIR)/package.json || (echo "Error: $(WEBSITE_DIR)/package.json not found" && exit 1)
+	@test -d $(WEBSITE_DIR)/content || (echo "Error: $(WEBSITE_DIR)/content directory not found" && exit 1)
 	@echo "Validating content..."
-	@test -f content/index.md || echo "Warning: content/index.md not found"
+	@test -f $(WEBSITE_DIR)/content/index.md || echo "Warning: $(WEBSITE_DIR)/content/index.md not found"
 	@echo "Running integration tests..."
-	npm test
+	cd $(WEBSITE_DIR) && npm test
 	@echo "All tests passed!"
 
 # Clean build artifacts
 clean:
 	@echo "Cleaning build artifacts..."
-	rm -rf public/
-	rm -rf .quartz-cache/
-	rm -rf node_modules/
+	rm -rf $(WEBSITE_DIR)/public/
+	rm -rf $(WEBSITE_DIR)/.quartz-cache/
+	rm -rf $(WEBSITE_DIR)/node_modules/
 	@echo "Clean complete!"
 
 # Sync vault content to content directory
@@ -75,7 +82,7 @@ admin-dev: sync-vault
 	@echo "Quartz site: http://localhost:8080"
 	@trap 'kill 0' EXIT; \
 	cd reading-assistant && python server.py & \
-	npx quartz build --serve --port 8080
+	cd $(WEBSITE_DIR) && npx quartz build --serve --port 8080
 
 # Add a book to processing queue
 add-book:

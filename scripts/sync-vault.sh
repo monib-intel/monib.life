@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Sync content from vault to content directory for Quartz
+# Sync content from vault to website/content directory for Quartz
 
 set -e
 
 VAULT_DIR="vault"
-CONTENT_DIR="content"
+CONTENT_DIR="website/content"
 
 echo "Syncing vault to content directory..."
 

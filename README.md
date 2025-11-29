@@ -25,10 +25,14 @@ make build
 
 ```
 /
-├── vault/               # Obsidian vault (submodule)
-├── content/             # Markdown content (synced from vault)
-├── quartz/              # Quartz framework
-├── public/              # Static assets (build output)
+├── website/             # Quartz website (submodule: monib-intel/monib.life-website)
+│   ├── quartz/          # Quartz framework
+│   ├── content/         # Markdown content (synced from ../vault)
+│   ├── public/          # Build output (gitignored)
+│   ├── quartz.config.ts # Quartz configuration
+│   ├── package.json     # Node dependencies
+│   └── ...
+├── vault/               # Obsidian vault (submodule: monib-intel/vault)
 ├── services/            # Backend services (separate repos, gitignored)
 │   ├── admin-api/
 │   └── resume-assistant/
@@ -37,16 +41,50 @@ make build
 │       ├── uploads/     # Books uploaded via web interface
 │       ├── manual/      # Books added via make add-book
 │       └── api/         # Books received via API
-├── scripts/             # Build and sync scripts
-├── docs/                # Documentation
+├── scripts/             # Orchestration scripts
 ├── Makefile             # Build commands
 └── flake.nix            # Nix development environment
 ```
 
 **Key directories:**
+- `website/` - Quartz website (submodule: [monib-intel/monib.life-website](https://github.com/monib-intel/monib.life-website))
 - `vault/` - Obsidian vault (submodule: [monib-intel/vault](https://github.com/monib-intel/vault))
 - `private/books/` - Book storage for processing (gitignored content, structure tracked)
 - `services/` - Backend services (each is a separate git repository)
+
+## Submodules
+
+This project uses git submodules:
+- **vault**: Personal knowledge base and content source ([monib-intel/vault](https://github.com/monib-intel/vault))
+- **website**: Quartz-based website ([monib-intel/monib.life-website](https://github.com/monib-intel/monib.life-website))
+
+### Submodule Workflow
+
+#### For users cloning:
+```bash
+git clone https://github.com/monib-intel/monib.life.git
+cd monib.life
+git submodule update --init --recursive
+make install
+```
+
+#### For updating website:
+```bash
+# In website repo
+cd website
+git pull origin main
+
+# In main repo
+git add website
+git commit -m "chore: update website submodule"
+```
+
+#### For developing website independently:
+```bash
+git clone https://github.com/monib-intel/monib.life-website.git
+cd monib.life-website
+# Develop and test standalone
+```
 
 ## Admin Interface
 
@@ -84,11 +122,6 @@ Books are stored in `private/books/` with subdirectories for different sources:
 - `api/` - Books received via API
 
 The directory structure is tracked in git, but book files are gitignored.
-
-## Submodules
-
-This project uses git submodules:
-- **vault**: Personal knowledge base and content source ([monib-intel/vault](https://github.com/monib-intel/vault))
 
 ## Development
 
