@@ -7,3 +7,6 @@
 [submodule "services/syntopical-reading-assistant"]
 	path = services/syntopical-reading-assistant
 	url = https://github.com/monib-intel/syntopical-reading-assistant.git
+[submodule "services/reading-assistant"]
+	path = services/reading-assistant
+	url = https://github.com/monib-intel/reading-bot.git
