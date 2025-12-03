@@ -249,14 +249,135 @@ monib.life/
 ├── agents.md                 # Assistant integration guide
 ├── flake.nix                 # NixOS development environment & deployment
 ├── flake.lock                # Locked dependencies
-├── vault/                    # Content (Obsidian vault)
-├── services/                 # AI assistants (see individual READMEs)
-├── admin/                    # Admin interface (future)
+├── vault/                    # Content (Obsidian vault) - SUBMODULE
+├── website/                  # Quartz website - SUBMODULE
+├── services/
+│   ├── reading-assistant/    # SUBMODULE pointing to reading-bot repo
+│   ├── resume-assistant/     # Resume generation service
+│   └── syntopical-reading-assistant/  # SUBMODULE
 ├── scripts/                  # Build and sync scripts
-├── quartz.config.ts          # Quartz configuration
-├── project-sources.json      # External project references
-└── package.json              # Node dependencies
+└── .gitmodules               # Submodule configuration
 ```
+
+## Sprint Planning
+
+All open issues across monib.life, website, reading-bot, and syntopical-reading-assistant are organized into sprint plans below. Issues are prioritized by dependencies and impact.
+
+### Sprint 1: Foundation & Deployment (Weeks 1-2)
+**Goal**: Enable local server deployment with core functionality
+
+#### monib.life
+- [ ] #31 - Rename reading-assistant service to ebook-summary-assistant (Documentation/naming)
+- [ ] #30 - Deploy monib.life to internet and test functionality (Main orchestration)
+- [ ] #20 - Replace Makefile with executable shell scripts (Infrastructure)
+
+#### monib.life-website  
+- [ ] #8 - Local server deployment - Website infrastructure (Build & serve optimization)
+
+#### reading-bot
+- [ ] #32 - Local server deployment - reading-bot service infrastructure (Production setup)
+
+**Completion Criteria**: Website and admin interface running on local server with proper environment config
+
+---
+
+### Sprint 2: PDF Export & Content Management (Weeks 3-4)
+**Goal**: Add PDF export and improve content handling
+
+#### monib.life
+- [ ] #24 - Implement MCP for Local Server and Uploaded Content (Enhancement)
+- [ ] #13 - Admin logs should include reading-assistant processing outputs (Logging)
+
+#### monib.life-website
+- [ ] #6 - Convert markdown to PDF with Literata font for download (User-facing feature)
+
+#### reading-bot
+- [ ] #25 - Support PDF books (separate converter to MD) (Format support)
+- [ ] #16 - Refactor: Separate EPUB conversion and AI analysis (Code quality)
+
+**Completion Criteria**: Users can download pages as PDFs; PDF books processed correctly
+
+---
+
+### Sprint 3: Reading Assistant Enhancements (Weeks 5-6)
+**Goal**: Improve book processing and analysis capabilities
+
+#### reading-bot
+- [ ] #26 - Parallel processing for batch book conversion (Performance)
+- [ ] #29 - Link validation and back-links navigation (Quality)
+- [ ] #11 - Review three generated books (Testing/validation)
+- [ ] #13 - Batch processing multiple EPUB books (Feature)
+
+#### syntopical-reading-assistant
+- [ ] #18 - Category/tagging system for library organization (Organization)
+
+**Completion Criteria**: Batch processing works; links validated; books properly organized
+
+---
+
+### Sprint 4: Documentation & Polish (Weeks 7-8)
+**Goal**: Document changes and prepare for broader usage
+
+#### reading-bot
+- [ ] #17 - Document the agent and API changes (Documentation)
+- [ ] #30 - Expand central thesis (Documentation/context)
+
+#### All repos
+- [ ] Update all README files with new architecture
+- [ ] Document API endpoints
+- [ ] Create deployment runbooks
+
+**Completion Criteria**: All features documented; deployment runbooks complete
+
+---
+
+## Current Status by Repository
+
+### monib.life (Main)
+- ✅ Sub-repository structure finalized (vault, website, syntopical-reading-assistant as submodules)
+- ✅ reading-bot integrated as reading-assistant submodule  
+- ✅ Admin-api and pdf-conversion removed (consolidating functionality)
+- ✅ Repository cleaned (removed duplicate files)
+- 🔄 Deployment infrastructure (in progress)
+- 📋 5 open issues
+
+### monib.life-website  
+- ✅ Converted to git submodule
+- ✅ Website files properly organized
+- 🔄 Deployment setup required
+- 🔄 PDF export feature needed
+- 📋 2 open issues
+
+### reading-bot
+- ✅ Integrated as submodule in monib.life
+- ✅ Parallel processing merged (PR #31)
+- 🔄 Production deployment setup
+- 🔄 PDF support for book processing
+- 📋 9 open issues
+
+### syntopical-reading-assistant
+- ✅ Available as submodule
+- 🔄 Tagging system for organization
+- 📋 1 open issue
+
+---
+
+## Issue Legend
+
+| Symbol | Meaning |
+|--------|---------|
+| ✅ | Complete |
+| 🔄 | In Progress |
+| 📋 | Open/Planned |
+| ⚠️ | Blocked/Needs Review |
+
+## Repository Links
+
+- **Main**: https://github.com/monib-intel/monib.life
+- **Website**: https://github.com/monib-intel/monib.life-website
+- **Reading Bot**: https://github.com/monib-intel/reading-bot
+- **Syntopical Assistant**: https://github.com/monib-intel/syntopical-reading-assistant
+- **Vault**: https://github.com/monib-intel/vault
 
 ## Future Enhancements
 - Admin UI for assistant access
