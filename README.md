@@ -271,7 +271,7 @@ All open issues across monib.life, website, reading-bot, and syntopical-reading-
 - [ ] #30 - Deploy monib.life to internet and test functionality (Main orchestration)
 - [ ] #20 - Replace Makefile with executable shell scripts (Infrastructure)
 
-#### monib.life-website  
+#### monib.life-website
 - [ ] #8 - Local server deployment - Website infrastructure (Build & serve optimization)
 
 #### reading-bot
@@ -335,13 +335,13 @@ All open issues across monib.life, website, reading-bot, and syntopical-reading-
 
 ### monib.life (Main)
 - ✅ Sub-repository structure finalized (vault, website, syntopical-reading-assistant as submodules)
-- ✅ reading-bot integrated as reading-assistant submodule  
+- ✅ reading-bot integrated as reading-assistant submodule
 - ✅ Admin-api and pdf-conversion removed (consolidating functionality)
 - ✅ Repository cleaned (removed duplicate files)
 - 🔄 Deployment infrastructure (in progress)
 - 📋 5 open issues
 
-### monib.life-website  
+### monib.life-website
 - ✅ Converted to git submodule
 - ✅ Website files properly organized
 - 🔄 Deployment setup required
