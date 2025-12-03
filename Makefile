@@ -1,13 +1,6 @@
 # Makefile for monib.life - Quartz-based personal website
-#
-# This repository uses submodules for content sources:
-#   - vault/   - Obsidian vault (content source)
-#   - website/ - Quartz website (build system)
 
-.PHONY: all install dev build test clean deploy sync sync-vault help admin-server admin-dev add-book process-books
-
-# Website directory (submodule)
-WEBSITE_DIR := website
+.PHONY: all install dev build test clean deploy sync help
 
 # Default target
 all: help
@@ -15,49 +8,44 @@ all: help
 # Install dependencies
 install:
 	@echo "Installing dependencies..."
-	@echo "Updating submodules..."
-	git submodule update --init --recursive
-	cd $(WEBSITE_DIR) && npm install
+	npm install
 
 # Start development server with hot reload
-dev: sync-vault
+dev:
 	@echo "Starting development server..."
-	cd $(WEBSITE_DIR) && npx quartz build --serve
+	npx quartz build --serve
 
 # Build for production
-build: sync-vault
+build:
 	@echo "Building for production..."
-	cd $(WEBSITE_DIR) && npx quartz build
+	npx quartz build
 
 # Run tests
 test:
 	@echo "Running tests..."
 	@echo "Checking required files..."
-	@test -f $(WEBSITE_DIR)/quartz.config.ts || (echo "Error: $(WEBSITE_DIR)/quartz.config.ts not found" && exit 1)
-	@test -f $(WEBSITE_DIR)/package.json || (echo "Error: $(WEBSITE_DIR)/package.json not found" && exit 1)
-	@test -d $(WEBSITE_DIR)/content || (echo "Error: $(WEBSITE_DIR)/content directory not found" && exit 1)
-	@echo "Validating content..."
-	@test -f $(WEBSITE_DIR)/content/index.md || echo "Warning: $(WEBSITE_DIR)/content/index.md not found"
-	@echo "Running integration tests..."
-	cd $(WEBSITE_DIR) && npm test
+	@test -f quartz.config.ts || (echo "Error: quartz.config.ts not found" && exit 1)
+	@test -f package.json || (echo "Error: package.json not found" && exit 1)
+	@test -d vault || (echo "Error: vault directory not found" && exit 1)
+	@test -d vault/.obsidian || echo "Warning: vault/.obsidian directory not found"
+	@echo "Validating vault content..."
+	@test -f vault/index.md || (echo "Error: vault/index.md not found" && exit 1)
+	@echo "Checking scripts..."
+	@test -x scripts/sync-projects.sh || chmod +x scripts/sync-projects.sh
 	@echo "All tests passed!"
 
 # Clean build artifacts
 clean:
 	@echo "Cleaning build artifacts..."
-	rm -rf $(WEBSITE_DIR)/public/
-	rm -rf $(WEBSITE_DIR)/.quartz-cache/
-	rm -rf $(WEBSITE_DIR)/node_modules/
+	rm -rf public/
+	rm -rf .quartz-cache/
+	rm -rf node_modules/
 	@echo "Clean complete!"
 
-# Sync vault content to content directory
-sync-vault:
-	@echo "Syncing vault to content directory..."
-	@./scripts/sync-vault.sh
-
-# Sync all (vault + future external projects)
-sync: sync-vault
-	@echo "All sync complete!"
+# Sync external project documentation
+sync:
+	@echo "Syncing external projects..."
+	./scripts/sync-projects.sh
 
 # Deploy to production (placeholder - customize based on deployment target)
 deploy: build
@@ -66,47 +54,6 @@ deploy: build
 	@echo "Configure this target for your deployment method or use 'nix run .#deploy'"
 	@echo "See README.md for deployment options (Netlify, Vercel, Cloudflare Pages, NixOS)."
 
-# Admin server targets
-
-# Start admin server only
-admin-server:
-	@echo "Starting admin server on port 3000..."
-	@echo "Access at: http://localhost:3000"
-	@echo "Default password: admin (set ADMIN_PASSWORD env var for production)"
-	cd services/reading-assistant && python server.py
-
-# Start admin server + Quartz dev server (runs both in parallel)
-admin-dev: sync-vault
-	@echo "Starting admin server (port 3000) and Quartz dev server (port 8080)..."
-	@echo "Admin UI: http://localhost:3000"
-	@echo "Quartz site: http://localhost:8080"
-	@trap 'kill 0' EXIT; \
-	cd services/reading-assistant && python server.py & \
-	cd $(WEBSITE_DIR) && npx quartz build --serve --port 8080
-
-# Add a book to processing queue
-add-book:
-ifndef FILE
-	$(error FILE is required. Usage: make add-book FILE=path/to/book.epub)
-endif
-	@echo "Adding book to queue: $(FILE)"
-	@test -f "$(FILE)" || (echo "Error: File not found: $(FILE)" && exit 1)
-	@cp "$(FILE)" private/books/manual/
-	@echo "✓ Book added to private/books/manual/"
-	@echo "Run 'make process-books' to process it"
-
-# Process all books in queue
-process-books:
-	@echo "Processing books in queue..."
-	@echo "Note: Full reading-bot integration pending"
-	@echo "Books in queue:"
-	@echo "Uploads:"
-	@find private/books/uploads -maxdepth 1 -type f \( -name "*.epub" -o -name "*.pdf" -o -name "*.mobi" -o -name "*.azw" -o -name "*.azw3" \) 2>/dev/null | grep . || echo "  (none)"
-	@echo "Manual:"
-	@find private/books/manual -maxdepth 1 -type f \( -name "*.epub" -o -name "*.pdf" -o -name "*.mobi" -o -name "*.azw" -o -name "*.azw3" \) 2>/dev/null | grep . || echo "  (none)"
-	@echo "API:"
-	@find private/books/api -maxdepth 1 -type f \( -name "*.epub" -o -name "*.pdf" -o -name "*.mobi" -o -name "*.azw" -o -name "*.azw3" \) 2>/dev/null | grep . || echo "  (none)"
-
 # Show help
 help:
 	@echo "monib.life - Build and development commands"
@@ -114,24 +61,17 @@ help:
 	@echo "Usage: make <target>"
 	@echo ""
 	@echo "Targets:"
-	@echo "  install       Install dependencies and update submodules"
-	@echo "  dev           Sync vault and start development server"
-	@echo "  build         Sync vault and build site for production"
-	@echo "  test          Run tests and validate configuration"
-	@echo "  clean         Remove build artifacts and node_modules"
-	@echo "  sync-vault    Sync vault content to content directory"
-	@echo "  sync          Sync all content (vault + external projects)"
-	@echo "  deploy        Build and deploy to production (placeholder)"
-	@echo "  admin-server  Start admin server only (port 3000)"
-	@echo "  admin-dev     Start admin server + Quartz dev server"
-	@echo "  add-book      Add a book to processing queue (FILE=path/to/book)"
-	@echo "  process-books Process all books in queue"
-	@echo "  help          Show this help message"
+	@echo "  install    Install dependencies (npm install)"
+	@echo "  dev        Start development server with hot reload"
+	@echo "  build      Build site for production"
+	@echo "  test       Run tests and validate configuration"
+	@echo "  clean      Remove build artifacts and node_modules"
+	@echo "  sync       Sync external project documentation"
+	@echo "  deploy     Build and deploy to production (placeholder)"
+	@echo "  help       Show this help message"
 	@echo ""
 	@echo "Examples:"
-	@echo "  make install                    # Install all dependencies"
-	@echo "  make dev                        # Start local development server"
-	@echo "  make build                      # Build production site"
-	@echo "  make test                       # Run all tests"
-	@echo "  make admin-dev                  # Start admin + dev servers"
-	@echo "  make add-book FILE=book.epub    # Add book to queue"
+	@echo "  make install    # Install all dependencies"
+	@echo "  make dev        # Start local development server"
+	@echo "  make build      # Build production site"
+	@echo "  make test       # Run all tests"

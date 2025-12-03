@@ -1,128 +1,266 @@
 # monib.life
 
-Personal website and digital garden built with [Quartz v4](https://quartz.jzhao.xyz/).
+Personal website built with Quartz, featuring an Obsidian vault as the content layer and AI assistants for content generation.
 
-## Quick Start
+## Architecture Overview
+
+```
+monib.life/
+├── vault/                    # Obsidian vault (primary content)
+│   ├── .obsidian/           # Obsidian configuration
+│   ├── reading/             # Book summaries
+│   ├── resume/              # Resume source data
+│   │   └── source.md        # Complete resume
+│   └── projects/            # Project documentation
+├── services/
+│   ├── reading-assistant/   # See reading-assistant/README.md
+│   ├── resume-assistant/    # See resume-assistant/README.md
+│   └── admin-api/           # Backend for admin interface
+├── admin/                   # Hidden admin UI
+├── scripts/
+│   └── sync-projects.sh     # Syncs external project docs
+├── project-sources.json     # External project references
+├── flake.nix                # NixOS development environment
+├── flake.lock               # Locked dependencies
+└── quartz.config.ts         # Quartz configuration
+```
+
+## Core Principles
+
+1. **Obsidian vault as source of truth**: All content lives in `vault/` as markdown
+2. **Native compatibility**: Leverage existing standards (frontmatter, wikilinks, tags)
+3. **Draft workflow**: Assistants generate content with `status: draft`, reviewed in Obsidian
+4. **Composable architecture**: Each component operates independently
+5. **Reproducible environments**: NixOS flake for consistent development and deployment
+
+## Local Development
+
+### Prerequisites
+- NixOS or Nix package manager with flakes enabled
+- Obsidian (for content editing)
+- Git
+
+### Setup with Nix
 
 ```bash
-# Clone with submodules
-git clone --recursive https://github.com/monib-intel/monib.life.git
+# Clone repository
+git clone <repo-url> monib.life
+cd monib.life
 
-# Or if already cloned, initialize submodules
-git submodule update --init --recursive
+# Enter development shell (automatically installs all dependencies)
+nix develop
 
-# Install dependencies
+# All dependencies (Node.js, Python, packages) are now available
+```
+
+The Nix flake provides:
+- Node.js and npm for Quartz
+- Python with all required packages for assistants
+- Build tools and utilities
+- Consistent versions across all environments
+
+### Alternative: Manual Setup
+
+If not using Nix:
+
+```bash
+# Install dependencies manually
+npm install
+cd services/reading-assistant && pip install -r requirements.txt
+cd ../resume-assistant && pip install -r requirements.txt
+```
+
+### Build Site
+```bash
+npx quartz build
+```
+
+### Run Locally
+```bash
+npx quartz serve
+```
+
+## Make Commands
+
+The project includes a Makefile for consistent build operations:
+
+```bash
+make install    # Install dependencies
+make dev        # Start development server with hot reload
+make build      # Build for production
+make test       # Run tests and validate configuration
+make clean      # Clean build artifacts
+make sync       # Sync external project documentation
+make deploy     # Build and deploy to production
+make help       # Show all available commands
+```
+
+### Quick Start with Make
+
+```bash
+# Initial setup
 make install
 
-# Start development server
+# Start development
 make dev
 
 # Build for production
 make build
 ```
 
-## Project Structure
+## Content Workflow
 
-```
-/
-├── website/             # Quartz website (submodule: monib-intel/monib.life-website)
-│   ├── quartz/          # Quartz framework
-│   ├── content/         # Markdown content (synced from ../vault)
-│   ├── public/          # Build output (gitignored)
-│   ├── quartz.config.ts # Quartz configuration
-│   ├── package.json     # Node dependencies
-│   └── ...
-├── vault/               # Obsidian vault (submodule: monib-intel/vault)
-├── services/            # Backend services (separate repos, gitignored)
-│   ├── admin-api/
-│   └── resume-assistant/
-├── private/             # Sensitive/uploaded content (gitignored)
-│   └── books/
-│       ├── uploads/     # Books uploaded via web interface
-│       ├── manual/      # Books added via make add-book
-│       └── api/         # Books received via API
-├── scripts/             # Orchestration scripts
-├── Makefile             # Build commands
-└── flake.nix            # Nix development environment
-```
+### Publishing Content
+1. Edit/create markdown files in `vault/`
+2. Use Obsidian for editing (optional but recommended)
+3. Commit and push changes
+4. Site rebuilds automatically (deployment setup TBD)
 
-**Key directories:**
-- `website/` - Quartz website (submodule: [monib-intel/monib.life-website](https://github.com/monib-intel/monib.life-website))
-- `vault/` - Obsidian vault (submodule: [monib-intel/vault](https://github.com/monib-intel/vault))
-- `private/books/` - Book storage for processing (gitignored content, structure tracked)
-- `services/` - Backend services (each is a separate git repository)
+### Using Assistants
+Assistants write content to `vault/` with `status: draft` frontmatter:
 
-## Submodules
+1. Run assistant (see `services/*/README.md` for usage)
+2. Assistant generates content in `vault/` with `status: draft`
+3. Review/edit in Obsidian
+4. Remove `status: draft` or change to `status: published`
+5. Commit and push
 
-This project uses git submodules:
-- **vault**: Personal knowledge base and content source ([monib-intel/vault](https://github.com/monib-intel/vault))
-- **website**: Quartz-based website ([monib-intel/monib.life-website](https://github.com/monib-intel/monib.life-website))
+### Content Filtering
 
-### Submodule Workflow
+Quartz filters content by frontmatter:
+- `status: draft` → Excluded from published site
+- No status or `status: published` → Included in site
 
-#### For users cloning:
-```bash
-git clone https://github.com/monib-intel/monib.life.git
-cd monib.life
-git submodule update --init --recursive
-make install
-```
+## Project Sync
 
-#### For updating website:
-```bash
-# In website repo
-cd website
-git pull origin main
+External project documentation automatically syncs during build:
 
-# In main repo
-git add website
-git commit -m "chore: update website submodule"
+1. Configure projects in `project-sources.json`
+2. Run `./scripts/sync-projects.sh` (manual for now)
+3. Project docs appear in `vault/projects/`
+4. Quartz builds updated content
+
+### project-sources.json Format
+
+```json
+{
+  "projects": [
+    {
+      "name": "project-name",
+      "repo": "username/repo-name",
+      "sync": ["README.md", "docs/"],
+      "branch": "main"
+    }
+  ]
+}
 ```
 
-#### For developing website independently:
-```bash
-git clone https://github.com/monib-intel/monib.life-website.git
-cd monib.life-website
-# Develop and test standalone
-```
+## Deployment
 
-## Admin Interface
+### Development (NixOS)
 
-A hidden admin interface is available for managing book uploads and processing:
+The flake provides a development shell with all dependencies:
 
 ```bash
-# Start admin server only (port 3000)
-make admin-server
-
-# Start admin + Quartz dev server (recommended)
-make admin-dev
-
-# Add a book manually (stored in private/books/manual/)
-make add-book FILE=path/to/book.epub
-
-# Process all books in queue
-make process-books
+nix develop
 ```
 
-**Access:** http://localhost:3000 (or your local IP for mobile access)  
-**Credentials:** Username: `admin` / Password: `admin` (set `ADMIN_PASSWORD` env var for production)
+### Production (NixOS Server)
 
-### Features
-- 📤 Upload EPUB/PDF books via web interface or mobile
-- 🤖 AI-powered Inspectional Reading summaries
-- 📋 Book queue management
-- 🔄 Vault sync and site rebuild controls
-- 📊 Live logs viewer
+Deploy to NixOS home server:
 
-### Book Storage
+```nix
+# /etc/nixos/configuration.nix or home-manager config
+{
+  imports = [ ./monib-life.nix ];
+}
+```
 
-Books are stored in `private/books/` with subdirectories for different sources:
-- `uploads/` - Books uploaded via web interface
-- `manual/` - Books added via `make add-book`
-- `api/` - Books received via API
+The NixOS module handles:
+- Service deployment
+- Dependency management
+- Automatic rebuilds
+- System integration
 
-The directory structure is tracked in git, but book files are gitignored.
+### Alternative Hosting
 
-## Development
+**Phase 1 (Current)**: Local development and testing
 
-Built with Quartz v4, a static site generator for digital gardens and knowledge bases.
+**Phase 2**: Deploy to hosting service with admin interface
+
+Static site deployment options:
+- Netlify
+- Vercel
+- Cloudflare Pages
+
+For these platforms, the Nix flake ensures consistent builds in CI/CD.
+
+## NixOS Integration
+
+### Flake Structure
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  };
+
+  outputs = { self, nixpkgs }: {
+    devShells.x86_64-linux.default = ...;  # Development environment
+    packages.x86_64-linux.default = ...;    # Built website
+    nixosModules.default = ...;             # NixOS service module
+  };
+}
+```
+
+### Benefits of NixOS Approach
+
+- **Reproducible**: Same dependencies everywhere (dev, CI, production)
+- **Declarative**: Infrastructure and dependencies as code
+- **Atomic**: Rollback if deployment fails
+- **Composable**: Integrate with existing NixOS home server setup
+- **Cacheable**: Binary caches speed up builds
+
+### CI/CD with Nix
+
+```bash
+# In CI/CD pipeline
+nix build              # Build site
+nix flake check        # Run tests
+nix run .#deploy       # Deploy to server
+```
+
+## Standard Conventions
+
+All content should follow these conventions:
+
+- **Frontmatter**: YAML format for metadata
+- **Links**: Wikilinks `[[note]]` for internal references
+- **Tags**: `tags: [tag1, tag2]` in frontmatter
+- **Dates**: ISO format `YYYY-MM-DD`
+- **Filenames**: lowercase-kebab-case.md
+
+## Repository Structure
+
+```
+monib.life/
+├── README.md                 # This file
+├── Makefile                  # Build and development commands
+├── agents.md                 # Assistant integration guide
+├── flake.nix                 # NixOS development environment & deployment
+├── flake.lock                # Locked dependencies
+├── vault/                    # Content (Obsidian vault)
+├── services/                 # AI assistants (see individual READMEs)
+├── admin/                    # Admin interface (future)
+├── scripts/                  # Build and sync scripts
+├── quartz.config.ts          # Quartz configuration
+├── project-sources.json      # External project references
+└── package.json              # Node dependencies
+```
+
+## Future Enhancements
+- Admin UI for assistant access
+- Automated project sync (webhook or scheduled)
+- Authentication for admin interface
+- Resume PDF generation API
+- NixOS service module for home server deployment
