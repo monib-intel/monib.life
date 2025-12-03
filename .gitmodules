@@ -4,3 +4,6 @@
 [submodule "website"]
 	path = website
 	url = https://github.com/monib-intel/monib.life-website.git
+[submodule "services/syntopical-reading-assistant"]
+	path = services/syntopical-reading-assistant
+	url = https://github.com/monib-intel/syntopical-reading-assistant.git
