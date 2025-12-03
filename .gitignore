@@ -49,3 +49,4 @@ result-*
 .coverage
 htmlcov/
 .pytest_cache/
+.env
