@@ -59,6 +59,8 @@ The Nix flake provides:
 - Build tools and utilities
 - Consistent versions across all environments
 
+**Note:** The flake uses a composable architecture that merges submodule flakes. See [docs/FLAKE_ARCHITECTURE.md](docs/FLAKE_ARCHITECTURE.md) for details.
+
 ### Alternative: Manual Setup
 
 If not using Nix:
