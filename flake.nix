@@ -10,7 +10,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-
+        
         pythonPackages = ps: with ps; [
           # Common packages for assistants
           requests
@@ -23,68 +23,60 @@
           pytest
           black
           flake8
-          # Admin server
-          flask
-          werkzeug
         ];
-
+        
         python = pkgs.python311.withPackages pythonPackages;
-
+        
       in {
         devShells.default = pkgs.mkShell {
           buildInputs = [
-            # Node.js for Quartz (v22 required for Quartz v4.5+)
-            pkgs.nodejs_22
+            # Node.js for Quartz
+            pkgs.nodejs_20
             pkgs.nodePackages.npm
-
+            
             # Python for assistants
             python
-
+            
             # Build tools
-            pkgs.gnumake
             pkgs.jq
             pkgs.curl
             pkgs.git
-            pkgs.rsync
-
+            
             # Optional: for PDF generation
             pkgs.pandoc
             pkgs.texliveSmall
           ];
-
+          
           shellHook = ''
             echo "monib.life development environment loaded"
             echo "Node.js: $(node --version)"
             echo "Python: $(python --version)"
             echo ""
             echo "Available commands:"
-            echo "  make install    - Install dependencies and update submodules"
-            echo "  make dev        - Sync vault and start dev server"
-            echo "  make build      - Sync vault and build site"
-            echo "  make admin-dev  - Start admin + Quartz dev servers"
-            echo "  make help       - Show all available commands"
+            echo "  npm run build   - Build the Quartz site"
+            echo "  npm run serve   - Run local dev server"
+            echo "  npm run sync    - Sync external projects"
           '';
         };
-
+        
         packages.default = pkgs.stdenv.mkDerivation {
           pname = "monib-life";
           version = "1.0.0";
           src = ./.;
-
+          
           buildInputs = [
-            pkgs.nodejs_22
+            pkgs.nodejs_20
             pkgs.nodePackages.npm
           ];
-
+          
           buildPhase = ''
-            cd website
             npm ci
             npx quartz build
           '';
-
+          
           installPhase = ''
             mkdir -p $out
-            cp -r website/public/* $out/
+            cp -r public/* $out/
           '';
         };
       }

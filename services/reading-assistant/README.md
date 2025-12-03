@@ -1,66 +1,117 @@
 # Reading Assistant
 
-AI-powered book reading and summarization service.
+AI assistant that generates book summaries from EPUB files.
 
 ## Overview
 
-The Reading Assistant provides an admin interface for uploading and processing books. It generates "Inspectional Reading" summaries using AI and saves them to the vault.
-
-## Status
-
-**Not yet implemented.** This is a placeholder for future development.
-
-## Planned Features
-
-- Web admin interface for book uploads
-- AI-powered book summarization
-- Integration with vault for storing summaries
-- Queue management for batch processing
+The Reading Assistant processes EPUB files and generates structured book summaries suitable for the monib.life website. Summaries are written to `vault/reading/` with draft status.
 
 ## Usage
 
-### Starting the Admin Server
+### With Nix (Recommended)
 
 ```bash
 # From project root
-make admin-server
+nix develop
 
-# Or with Quartz dev server
-make admin-dev
+cd services/reading-assistant
+python main.py /path/to/book.epub
 ```
 
-### Adding Books
+### Manual Setup
 
 ```bash
-# Via Makefile
-make add-book FILE=path/to/book.epub
+cd services/reading-assistant
+pip install -r requirements.txt
+python main.py /path/to/book.epub
+```
 
-# Books are stored in private/books/
+## Input
+
+- EPUB file (`.epub`)
+- Optional: Custom output filename
+
+## Output
+
+Markdown file in `vault/reading/` with:
+
+```yaml
+---
+status: draft
+generated: YYYY-MM-DD
+title: "Book Title"
+author: "Author Name"
+tags: [reading, book-summary]
+isbn: "optional-isbn"
+---
+
+# Book Title
+
+## Summary
+[AI-generated summary]
+
+## Key Takeaways
+[Bullet points of main insights]
+
+## Notable Quotes
+[Selected quotes from the book]
+
+## Personal Notes
+[Section for human reviewer to add notes]
 ```
 
 ## Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `ADMIN_PASSWORD` | Admin interface password | No (default: admin) |
 | `OPENAI_API_KEY` | OpenAI API key | Yes* |
 | `ANTHROPIC_API_KEY` | Anthropic API key | Yes* |
+| `AI_PROVIDER` | `openai` or `anthropic` | No (default: openai) |
 
-*One of the API keys is required for AI summarization.
+*One of the API keys is required based on the chosen provider.
 
-## Output
+## Configuration
 
-Book summaries are saved to `vault/BookSummaries/` in Markdown format.
+Create a `.env` file:
+
+```env
+AI_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+```
+
+## Development
+
+### Running Tests
+
+```bash
+nix develop
+cd services/reading-assistant
+python -m pytest tests/
+```
+
+### Code Style
+
+```bash
+black main.py
+flake8 main.py
+```
 
 ## Architecture
 
-1. **Web Interface**: Upload and manage books
-2. **Queue Manager**: Track processing status
-3. **AI Summarizer**: Generate inspectional reading summaries
-4. **Vault Sync**: Save summaries to Obsidian vault
+1. **EPUB Parser**: Extracts text content from EPUB chapters
+2. **Chunker**: Splits content into manageable chunks for AI processing
+3. **Summarizer**: Generates summaries using configured AI provider
+4. **Formatter**: Outputs Quartz-compatible markdown with frontmatter
 
-## Related
+## Error Handling
 
-- `private/books/` - Book storage location
-- `vault/BookSummaries/` - Output location for summaries
-- `services/admin-api/` - Backend API service
+- Invalid EPUB files: Clear error message, non-zero exit
+- API failures: Retry with exponential backoff, fail after 3 attempts
+- Permission errors: Verify vault directory is writable
+
+## Future Enhancements
+
+- Support for PDF files
+- Multiple summary formats (short/detailed)
+- Chapter-by-chapter summaries
+- Integration with admin API

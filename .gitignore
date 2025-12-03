@@ -1,38 +1,51 @@
+# Dependencies
+node_modules/
+
+# Build output
+public/
+.quartz-cache/
+
+# Environment files
+.env
+.env.local
+.env*.local
+
+# OS files
 .DS_Store
-prof
-.obsidian
-.replit
-replit.nix
-.direnv/
+Thumbs.db
 
-# Private directory - structure tracked, content ignored
-!private/
-!private/README.md
-!private/books/
-!private/books/**/
-!private/books/**/.gitkeep
-private/books/**/*.epub
-private/books/**/*.pdf
-private/books/**/*.mobi
-private/books/**/*.azw
-private/books/**/*.azw3
+# Editor directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
-# Python cache
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.eggs/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Reading assistant - separate git repo, fully ignored
-reading-assistant/
+# Nix
+result
+result-*
 
-# Services - each is a separate git repository
-services/reading-assistant/
-services/admin-api/
-services/resume-assistant/
+# Temporary files
+*.tmp
+*.temp
+*.log
 
-# Website submodule - build artifacts and dependencies
-# Note: website/ itself is a submodule, but we need to ignore its build outputs
-# when developing locally before full submodule setup
-website/node_modules/
-website/public/
-website/.quartz-cache/
-website/tsconfig.tsbuildinfo
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
