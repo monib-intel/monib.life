@@ -4,11 +4,13 @@
 #   - vault/   - Obsidian vault (content source)
 #   - website/ - Quartz website (build system)
 
-.PHONY: all install dev build test clean deploy sync help
+.PHONY: all install dev build test clean deploy sync help admin-server admin-dev add-book process-books stop
 
 # Website directory (submodule)
 WEBSITE_DIR := website
 CONTENT_DIR := vault
+ADMIN_PORT := 3000
+QUARTZ_PORT := 8080
 
 # Default target
 all: help
@@ -69,24 +71,79 @@ deploy: build
 	@echo "Configure this target for your deployment method or use 'nix run .#deploy'"
 	@echo "See README.md for deployment options (Netlify, Vercel, Cloudflare Pages, NixOS)."
 
+# Sync vault content to website/content
+sync-vault:
+	@echo "Syncing vault to website/content..."
+	@./scripts/sync-vault.sh
+
+# Start admin server only
+admin-server:
+	@echo "Starting admin server on port $(ADMIN_PORT)..."
+	@echo "Access at: http://localhost:$(ADMIN_PORT)"
+	@echo "Default password: admin (set ADMIN_PASSWORD env var for production)"
+	cd services/reading-assistant && python server.py
+
+# Start admin server + Quartz dev server (runs both in parallel)
+admin-dev: sync-vault
+	@echo "Starting admin server (port $(ADMIN_PORT)) and Quartz dev server (port $(QUARTZ_PORT))..."
+	@echo "Admin UI: http://localhost:$(ADMIN_PORT)"
+	@echo "Quartz site: http://localhost:$(QUARTZ_PORT)"
+	@trap 'kill 0' EXIT; \
+	cd services/reading-assistant && python server.py & \
+	cd $(WEBSITE_DIR) && npx quartz build --serve --port $(QUARTZ_PORT)
+
+# Add a book to processing queue
+add-book:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Error: FILE variable not set"; \
+		echo "Usage: make add-book FILE=path/to/book.epub"; \
+		exit 1; \
+	fi
+	@echo "Adding $(FILE) to processing queue..."
+	@cp "$(FILE)" services/reading-assistant/books/queue/
+
+# Process all books in queue
+process-books:
+	@echo "Processing books in queue..."
+	cd services/reading-assistant && python process_epub.py
+
+# Kill all services
+stop:
+	@echo "Stopping all services..."
+	@pkill -f "python server.py" || true
+	@pkill -f "quartz" || true
+	@pkill -f "node" || true
+	@echo "All services stopped"
+
 # Show help
 help:
 	@echo "monib.life - Build and development commands"
 	@echo ""
 	@echo "Usage: make <target>"
 	@echo ""
-	@echo "Targets:"
-	@echo "  install    Install dependencies (npm install)"
-	@echo "  dev        Start development server with hot reload"
-	@echo "  build      Build site for production"
-	@echo "  test       Run tests and validate configuration"
-	@echo "  clean      Remove build artifacts and node_modules"
-	@echo "  sync       Sync external project documentation"
-	@echo "  deploy     Build and deploy to production (placeholder)"
-	@echo "  help       Show this help message"
+	@echo "Build & Deployment Targets:"
+	@echo "  install      Install dependencies (npm install)"
+	@echo "  dev          Start development server with hot reload"
+	@echo "  build        Build site for production"
+	@echo "  test         Run tests and validate configuration"
+	@echo "  clean        Remove build artifacts and node_modules"
+	@echo "  sync         Sync external project documentation"
+	@echo "  deploy       Build and deploy to production (placeholder)"
+	@echo ""
+	@echo "Admin & Services Targets:"
+	@echo "  admin-server Start admin server only (port $(ADMIN_PORT))"
+	@echo "  admin-dev    Start admin server + Quartz dev server"
+	@echo "  sync-vault   Sync vault content to website/content"
+	@echo "  add-book     Add a book to processing queue (FILE=path/to/book)"
+	@echo "  process-books Process all books in queue"
+	@echo "  stop         Stop all running services"
+	@echo "  help         Show this help message"
 	@echo ""
 	@echo "Examples:"
-	@echo "  make install    # Install all dependencies"
-	@echo "  make dev        # Start local development server"
-	@echo "  make build      # Build production site"
-	@echo "  make test       # Run all tests"
+	@echo "  make install                       # Install all dependencies"
+	@echo "  make dev                           # Start local development server"
+	@echo "  make build                         # Build production site"
+	@echo "  make test                          # Run all tests"
+	@echo "  make admin-dev                     # Start admin + dev servers"
+	@echo "  make add-book FILE=book.epub       # Add book to queue"
+	@echo "  make stop                          # Stop all services"
