@@ -31,13 +31,14 @@
         devShells.default = pkgs.mkShell {
           buildInputs = [
             # Node.js for Quartz
-            pkgs.nodejs_20
+            pkgs.nodejs_22
             pkgs.nodePackages.npm
             
             # Python for assistants
             python
             
             # Build tools
+            pkgs.rsync
             pkgs.jq
             pkgs.curl
             pkgs.git
@@ -65,7 +66,7 @@
           src = ./.;
           
           buildInputs = [
-            pkgs.nodejs_20
+            pkgs.nodejs_22
             pkgs.nodePackages.npm
           ];
           
