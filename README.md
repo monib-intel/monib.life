@@ -199,19 +199,36 @@ For these platforms, the Nix flake ensures consistent builds in CI/CD.
 
 ### Flake Structure
 
+The main flake.nix uses a **composable architecture** that imports and merges submodule flakes:
+
 ```nix
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # Submodule flakes - each defines its own dependencies
+    reading-assistant.url = "path:./services/reading-assistant";
+    syntopical-reading-assistant.url = "path:./services/syntopical-reading-assistant";
+    website.url = "path:./website";
   };
 
-  outputs = { self, nixpkgs }: {
-    devShells.x86_64-linux.default = ...;  # Development environment
-    packages.x86_64-linux.default = ...;    # Built website
-    nixosModules.default = ...;             # NixOS service module
+  outputs = { self, nixpkgs, reading-assistant, ... }: {
+    # Composed development shell merges all submodule dependencies
+    devShells.x86_64-linux.default = ...;
+    
+    # Pass-through shells for independent submodule development
+    devShells.x86_64-linux.reading-assistant = ...;
+    devShells.x86_64-linux.syntopical-reading-assistant = ...;
+    devShells.x86_64-linux.website = ...;
   };
 }
 ```
+
+**Key Features:**
+- **Single Source of Truth**: Each submodule's `flake.nix` defines its own dependencies
+- **Automatic Composition**: Main flake merges all submodule dependencies via `inputsFrom`
+- **Independent Development**: Submodules can be developed independently in their own directories
+- **No Duplication**: Dependencies defined once in the appropriate submodule
+- **Version Consistency**: `inputs.nixpkgs.follows = "nixpkgs"` ensures all submodules use the same nixpkgs
 
 ### Benefits of NixOS Approach
 
