@@ -107,27 +107,27 @@
         
         # Pass through submodule devShells for independent development
         # If a submodule flake doesn't exist, provide a helpful message
-        devShells.reading-assistant = readingAssistantShell or (pkgs.mkShell {
+        devShells.reading-assistant = if readingAssistantShell != null then readingAssistantShell else pkgs.mkShell {
           shellHook = ''
             echo "⚠️  Reading Assistant flake not available"
             echo "The submodule may not be initialized or lacks a flake.nix"
             echo "Run: git submodule update --init --recursive"
           '';
-        });
-        devShells.syntopical-reading-assistant = syntopicalReadingAssistantShell or (pkgs.mkShell {
+        };
+        devShells.syntopical-reading-assistant = if syntopicalReadingAssistantShell != null then syntopicalReadingAssistantShell else pkgs.mkShell {
           shellHook = ''
             echo "⚠️  Syntopical Reading Assistant flake not available"
             echo "The submodule may not be initialized or lacks a flake.nix"
             echo "Run: git submodule update --init --recursive"
           '';
-        });
-        devShells.website = websiteShell or (pkgs.mkShell {
+        };
+        devShells.website = if websiteShell != null then websiteShell else pkgs.mkShell {
           shellHook = ''
             echo "⚠️  Website flake not available"
             echo "The website flake.nix is planned (issue #11)"
             echo "Until then, use the main development shell: nix develop"
           '';
-        });
+        };
       }
     );
 }
