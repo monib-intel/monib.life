@@ -8,6 +8,14 @@
     # Submodule flakes - using path inputs to reference local submodules
     # These inputs allow the main flake to compose submodule development environments
     # Each submodule's flake.nix is the single source of truth for its dependencies
+    # 
+    # NOTE: Submodules must be initialized before using this flake:
+    #   git submodule update --init --recursive
+    #
+    # Submodules with flakes:
+    # - services/reading-assistant (reading-bot repo)
+    # - services/syntopical-reading-assistant
+    # - website (planned - issue #11, currently uses fallback)
     reading-assistant = {
       url = "path:./services/reading-assistant";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -16,8 +24,6 @@
       url = "path:./services/syntopical-reading-assistant";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Note: website flake is planned (monib-intel/monib.life#11)
-    # Until then, the main flake will handle website dependencies
     website = {
       url = "path:./website";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -100,14 +106,27 @@
         };
         
         # Pass through submodule devShells for independent development
+        # If a submodule flake doesn't exist, provide a helpful message
         devShells.reading-assistant = readingAssistantShell or (pkgs.mkShell {
-          buildInputs = [ ];
+          shellHook = ''
+            echo "⚠️  Reading Assistant flake not available"
+            echo "The submodule may not be initialized or lacks a flake.nix"
+            echo "Run: git submodule update --init --recursive"
+          '';
         });
         devShells.syntopical-reading-assistant = syntopicalReadingAssistantShell or (pkgs.mkShell {
-          buildInputs = [ ];
+          shellHook = ''
+            echo "⚠️  Syntopical Reading Assistant flake not available"
+            echo "The submodule may not be initialized or lacks a flake.nix"
+            echo "Run: git submodule update --init --recursive"
+          '';
         });
         devShells.website = websiteShell or (pkgs.mkShell {
-          buildInputs = [ ];
+          shellHook = ''
+            echo "⚠️  Website flake not available"
+            echo "The website flake.nix is planned (issue #11)"
+            echo "Until then, use the main development shell: nix develop"
+          '';
         });
       }
     );
