@@ -39,6 +39,8 @@ pip-delete-this-directory.txt
 # Nix
 result
 result-*
+.direnv/
+flake.lock
 
 # Temporary files
 *.tmp
