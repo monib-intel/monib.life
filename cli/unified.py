@@ -21,6 +21,7 @@ import argparse
 import os
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
@@ -100,9 +101,11 @@ class ReadingCLI:
                         output_file = line.strip()
                         break
                 
-                # Fallback to default naming convention
+                # Fallback to default naming convention (may not match actual output)
+                # The actual filename is determined by the reading-assistant service
                 if not output_file:
                     output_file = f"{Path(epub_file).stem}_analysis.md"
+                    print(f"Note: Using fallback filename pattern. Check service output for actual file location.")
                 
                 print(f"✓ Analysis complete: {output_file}")
                 return output_file
@@ -164,9 +167,12 @@ class ReadingCLI:
                         output_file = line.strip()
                         break
                 
-                # Fallback to default naming convention
+                # Fallback to timestamped filename to avoid conflicts
+                # The actual filename is determined by the syntopical-reading-assistant service
                 if not output_file:
-                    output_file = "comparison_output.md"
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    output_file = f"comparison_{timestamp}.md"
+                    print(f"Note: Using fallback filename pattern. Check service output for actual file location.")
                 
                 print(f"✓ Comparison complete: {output_file}")
                 return output_file
@@ -306,17 +312,21 @@ class ReadingCLI:
         comparison_file = self.run_syntopical_compare(analyzed_files)
         if not comparison_file:
             print("Error: Comparison failed.")
+            print("Check the error messages above for details.")
             return False
         
         # Step 3: Connect to library
         if not self.run_library_connect(comparison_file):
-            print("Warning: Library connection failed, but comparison is complete.")
+            print("Warning: Library connection step failed.")
+            print(f"You can retry manually with: python cli/unified.py library-connect {comparison_file}")
         
         # Step 4: Find gaps
         if not self.run_find_gaps(comparison_file):
-            print("Warning: Gap analysis failed, but comparison is complete.")
+            print("Warning: Gap analysis step failed.")
+            print(f"You can retry manually with: python cli/unified.py find-gaps {comparison_file}")
         
         print("\n✓ Full syntopical analysis pipeline complete!")
+        print(f"Output: {comparison_file}")
         return True
 
 
