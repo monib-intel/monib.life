@@ -4,11 +4,12 @@
 #   - vault/   - Obsidian vault (content source)
 #   - website/ - Quartz website (build system)
 
-.PHONY: all install dev build test clean deploy sync help admin-server admin-dev add-book process-books stop
+.PHONY: all install dev build test clean deploy sync help admin-server admin-dev add-book process-books stop convert convert-help
 
 # Website directory (submodule)
 WEBSITE_DIR := website
 CONTENT_DIR := vault
+CONVERSION_SERVICE_DIR := services/conversion-service
 ADMIN_PORT := 3000
 QUARTZ_PORT := 8080
 
@@ -115,6 +116,20 @@ stop:
 	@pkill -f "node" || true
 	@echo "All services stopped"
 
+# Convert ebook files to Markdown
+convert:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Error: FILE variable not set"; \
+		echo "Usage: make convert FILE=path/to/book.epub [OUTPUT=./output]"; \
+		exit 1; \
+	fi
+	@echo "Converting $(FILE) to Markdown..."
+	@cd $(CONVERSION_SERVICE_DIR) && python src/cli.py $(FILE) --output-dir $(if $(OUTPUT),$(OUTPUT),./output)
+
+# Show conversion service help
+convert-help:
+	@cd $(CONVERSION_SERVICE_DIR) && python src/cli.py --help
+
 # Show help
 help:
 	@echo "monib.life - Build and development commands"
@@ -137,6 +152,11 @@ help:
 	@echo "  add-book     Add a book to processing queue (FILE=path/to/book)"
 	@echo "  process-books Process all books in queue"
 	@echo "  stop         Stop all running services"
+	@echo ""
+	@echo "Conversion Service Targets:"
+	@echo "  convert      Convert ebook to Markdown (FILE=path/to/book.epub [OUTPUT=./output])"
+	@echo "  convert-help Show conversion service help"
+	@echo ""
 	@echo "  help         Show this help message"
 	@echo ""
 	@echo "Examples:"
@@ -146,4 +166,5 @@ help:
 	@echo "  make test                          # Run all tests"
 	@echo "  make admin-dev                     # Start admin + dev servers"
 	@echo "  make add-book FILE=book.epub       # Add book to queue"
+	@echo "  make convert FILE=book.epub        # Convert book to Markdown"
 	@echo "  make stop                          # Stop all services"

@@ -15,6 +15,7 @@
     # Submodules with flakes:
     # - services/reading-assistant (reading-bot repo)
     # - services/syntopical-reading-assistant
+    # - services/conversion-service (standalone converter)
     # - website (planned - issue #11, currently uses fallback)
     reading-assistant = {
       url = "path:./services/reading-assistant";
@@ -24,13 +25,17 @@
       url = "path:./services/syntopical-reading-assistant";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    conversion-service = {
+      url = "path:./services/conversion-service";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     website = {
       url = "path:./website";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, reading-assistant, syntopical-reading-assistant, website }:
+  outputs = { self, nixpkgs, flake-utils, reading-assistant, syntopical-reading-assistant, conversion-service, website }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
@@ -45,6 +50,7 @@
         # Get submodule shells (may be null if flake doesn't exist)
         readingAssistantShell = getSubmoduleShell reading-assistant;
         syntopicalReadingAssistantShell = getSubmoduleShell syntopical-reading-assistant;
+        conversionServiceShell = getSubmoduleShell conversion-service;
         websiteShell = getSubmoduleShell website;
         
         # Orchestration tools that are only needed in the main flake
@@ -67,6 +73,7 @@
         submoduleShells = pkgs.lib.filter (x: x != null) [
           readingAssistantShell
           syntopicalReadingAssistantShell
+          conversionServiceShell
           websiteShell
         ];
       in
@@ -88,6 +95,7 @@
             echo "Composed from submodule flakes:"
             echo "  ${if readingAssistantShell != null then "✓" else "⚠"} services/reading-assistant"
             echo "  ${if syntopicalReadingAssistantShell != null then "✓" else "⚠"} services/syntopical-reading-assistant"
+            echo "  ${if conversionServiceShell != null then "✓" else "⚠"} services/conversion-service"
             echo "  ${if websiteShell != null then "✓" else "⚠"} website"
             echo ""
             echo "Available commands:"
@@ -101,6 +109,7 @@
             echo "  cd website && nix develop"
             echo "  cd services/reading-assistant && nix develop"
             echo "  cd services/syntopical-reading-assistant && nix develop"
+            echo "  cd services/conversion-service && nix develop"
             echo ""
           '';
         };
@@ -119,6 +128,13 @@
             echo "⚠️  Syntopical Reading Assistant flake not available"
             echo "The submodule may not be initialized or lacks a flake.nix"
             echo "Run: git submodule update --init --recursive"
+          '';
+        };
+        devShells.conversion-service = if conversionServiceShell != null then conversionServiceShell else pkgs.mkShell {
+          shellHook = ''
+            echo "⚠️  Conversion Service flake not available"
+            echo "The conversion-service may not have been created yet"
+            echo "Check: services/conversion-service/flake.nix"
           '';
         };
         devShells.website = if websiteShell != null then websiteShell else pkgs.mkShell {
