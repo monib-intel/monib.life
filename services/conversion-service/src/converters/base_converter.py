@@ -8,10 +8,6 @@ from typing import Optional
 class BaseConverter(ABC):
     """Base class for all book format converters."""
 
-    def __init__(self):
-        """Initialize the converter."""
-        pass
-
     @abstractmethod
     def convert(
         self,

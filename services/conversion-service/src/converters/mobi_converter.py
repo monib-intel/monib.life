@@ -14,7 +14,6 @@ class MOBIConverter(BaseConverter):
 
     def __init__(self):
         """Initialize the MOBI converter."""
-        super().__init__()
         self.epub_converter = EPUBConverter()
 
     def supports_format(self, file_path: Path) -> bool:

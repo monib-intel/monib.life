@@ -1,6 +1,5 @@
 """EPUB to Markdown converter."""
 
-import zipfile
 from pathlib import Path
 from typing import Optional
 import html2text
@@ -16,7 +15,6 @@ class EPUBConverter(BaseConverter):
 
     def __init__(self):
         """Initialize the EPUB converter."""
-        super().__init__()
         self.h2t = html2text.HTML2Text()
         self.h2t.ignore_links = False
         self.h2t.ignore_images = False

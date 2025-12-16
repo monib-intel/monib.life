@@ -3,20 +3,12 @@
 from pathlib import Path
 from typing import Optional
 import pdfplumber
-import html2text
 
 from .base_converter import BaseConverter
 
 
 class PDFConverter(BaseConverter):
     """Converter for PDF files to Markdown format."""
-
-    def __init__(self):
-        """Initialize the PDF converter."""
-        super().__init__()
-        self.h2t = html2text.HTML2Text()
-        self.h2t.ignore_links = False
-        self.h2t.body_width = 0
 
     def supports_format(self, file_path: Path) -> bool:
         """
