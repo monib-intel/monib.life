@@ -2,6 +2,24 @@
 
 Standalone service for converting ebook formats (EPUB, PDF, MOBI) to Markdown.
 
+## Quick Start
+
+```bash
+# Install dependencies
+cd services/conversion-service
+pip install -e .
+
+# Convert a single book
+python src/cli.py book.epub --output-dir ./output
+
+# Convert multiple books in parallel
+python src/cli.py books/*.epub --parallel --workers 4 --output-dir ./output
+
+# From main repository using Makefile
+cd ../../
+make convert FILE=path/to/book.epub OUTPUT=./output
+```
+
 ## Overview
 
 The conversion-service provides a clean, reusable interface for converting various ebook formats to Markdown. It has been extracted from the reading-assistant to enable:
@@ -196,16 +214,80 @@ Uses Calibre's `ebook-convert` to convert MOBI to EPUB first, then uses the EPUB
 
 ## Integration with Other Services
 
+### Using as a Python Library
+
+The conversion-service is designed to be imported and used by other services in the monib.life ecosystem. Here's how to integrate it:
+
+#### Option 1: Direct Import (Same Repository)
+
+```python
+# Add conversion-service/src to PYTHONPATH or use relative imports
+import sys
+from pathlib import Path
+
+# Add conversion-service to path
+conversion_service_path = Path(__file__).parent.parent / "conversion-service" / "src"
+sys.path.insert(0, str(conversion_service_path))
+
+from converters import EPUBConverter, PDFConverter, MOBIConverter
+
+# Use the converters
+converter = EPUBConverter()
+markdown_path = converter.convert(
+    input_path=Path("book.epub"),
+    output_dir=Path("./output"),
+    extract_images=True
+)
+```
+
+#### Option 2: Subprocess Call (Isolated)
+
+```python
+import subprocess
+from pathlib import Path
+
+def convert_book(input_file: Path, output_dir: Path) -> Path:
+    """Convert a book using the conversion-service CLI."""
+    result = subprocess.run(
+        [
+            "python",
+            "services/conversion-service/src/cli.py",
+            str(input_file),
+            "--output-dir", str(output_dir)
+        ],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+    return output_dir / f"{input_file.stem}.md"
+```
+
+#### Option 3: Install as Package
+
+```bash
+# From the conversion-service directory
+pip install -e .
+
+# Then in your service
+from converters import EPUBConverter
+```
+
 ### reading-assistant
 
-The reading-assistant can use conversion-service as a dependency:
+The reading-assistant can use conversion-service to separate conversion from AI analysis:
 
 ```python
 from converters import EPUBConverter
 
+# Step 1: Convert to Markdown
 converter = EPUBConverter()
 markdown_path = converter.convert(epub_file, output_dir)
-# Then proceed with AI analysis
+
+# Step 2: Read the markdown and proceed with AI analysis
+with open(markdown_path) as f:
+    content = f.read()
+    # Perform 8-stage AI analysis on content
+    analyze_book(content)
 ```
 
 ### syntopical-reading-assistant
