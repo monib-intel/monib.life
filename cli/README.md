@@ -2,6 +2,8 @@
 
 A command-line interface that orchestrates both **reading-assistant** and **syntopical-reading-assistant** services to provide a seamless reading workflow.
 
+> **Note**: This CLI is a coordination layer that calls the underlying reading services. The actual script entry points (process_epub.py, compare.py, etc.) are defined by the respective submodule implementations. The CLI validates that these scripts exist before attempting to call them and provides helpful error messages if they are not found.
+
 ## Overview
 
 The Unified CLI coordinates between the reading services to enable:

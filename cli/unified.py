@@ -5,6 +5,10 @@ Unified CLI for Reading Services
 This CLI orchestrates both reading-assistant and syntopical-reading-assistant services
 to provide a seamless workflow for analyzing and comparing books.
 
+NOTE: This CLI is a coordination layer that calls the underlying services.
+The actual script names and interfaces may vary based on the submodule implementations.
+Adjust the script paths in each method based on the actual service APIs.
+
 Usage:
     reading analyze-syntopical book1.epub book2.epub book3.epub
     reading analyze book1.epub
@@ -37,6 +41,15 @@ class ReadingCLI:
             return False
         return True
     
+    def check_script_exists(self, script_path: Path, script_name: str) -> bool:
+        """Check if a service script exists."""
+        if not script_path.exists():
+            print(f"Error: {script_name} not found at {script_path}")
+            print(f"The service may not have this entry point yet.")
+            print(f"Please check the service README for the correct interface.")
+            return False
+        return True
+    
     def run_reading_assistant(self, epub_file: str) -> Optional[str]:
         """
         Run reading-assistant on an EPUB file (8 stages).
@@ -46,6 +59,11 @@ class ReadingCLI:
             
         Returns:
             Path to the generated output markdown file, or None if failed
+            
+        Note:
+            This method assumes the reading-assistant service has a process_epub.py
+            entry point. Adjust the script name and arguments based on the actual
+            service API.
         """
         if not self.check_service_exists(self.reading_assistant_path, "reading-assistant"):
             return None
@@ -58,25 +76,39 @@ class ReadingCLI:
             print(f"Error: File not found: {epub_file}")
             return None
         
+        # Determine the script to call - adjust based on actual service interface
+        script_path = self.reading_assistant_path / "process_epub.py"
+        
+        if not self.check_script_exists(script_path, "process_epub.py"):
+            return None
+        
         # Call reading-assistant service
-        # This is a placeholder - actual implementation depends on reading-assistant API
         try:
-            # Example command - adjust based on actual reading-assistant interface
             cmd = [
                 "python",
-                str(self.reading_assistant_path / "process_epub.py"),
+                str(script_path),
                 epub_file
             ]
             result = subprocess.run(cmd, cwd=self.reading_assistant_path, capture_output=True, text=True)
             
             if result.returncode == 0:
-                # Parse output to get generated file path
-                # This is a placeholder - adjust based on actual output format
-                output_file = f"{Path(epub_file).stem}_analysis.md"
+                # Try to parse output from stdout to get the actual generated file path
+                # If the service prints the output file path, use it
+                output_file = None
+                for line in result.stdout.split('\n'):
+                    if line.strip().endswith('.md'):
+                        output_file = line.strip()
+                        break
+                
+                # Fallback to default naming convention
+                if not output_file:
+                    output_file = f"{Path(epub_file).stem}_analysis.md"
+                
                 print(f"✓ Analysis complete: {output_file}")
                 return output_file
             else:
-                print(f"Error running reading-assistant: {result.stderr}")
+                print(f"Error running reading-assistant:")
+                print(result.stderr)
                 return None
         except Exception as e:
             print(f"Error: {e}")
@@ -91,6 +123,11 @@ class ReadingCLI:
             
         Returns:
             Path to the comparison output file, or None if failed
+            
+        Note:
+            This method assumes the syntopical-reading-assistant service has a
+            compare.py entry point. Adjust the script name and arguments based on
+            the actual service API.
         """
         if not self.check_service_exists(self.syntopical_assistant_path, "syntopical-reading-assistant"):
             return None
@@ -104,21 +141,38 @@ class ReadingCLI:
                 print(f"Error: File not found: {md_file}")
                 return None
         
+        # Determine the script to call - adjust based on actual service interface
+        script_path = self.syntopical_assistant_path / "compare.py"
+        
+        if not self.check_script_exists(script_path, "compare.py"):
+            return None
+        
         # Call syntopical-reading-assistant compare function
         try:
             cmd = [
                 "python",
-                str(self.syntopical_assistant_path / "compare.py"),
+                str(script_path),
                 *markdown_files
             ]
             result = subprocess.run(cmd, cwd=self.syntopical_assistant_path, capture_output=True, text=True)
             
             if result.returncode == 0:
-                output_file = "comparison_output.md"
+                # Try to parse output from stdout to get the actual generated file path
+                output_file = None
+                for line in result.stdout.split('\n'):
+                    if line.strip().endswith('.md'):
+                        output_file = line.strip()
+                        break
+                
+                # Fallback to default naming convention
+                if not output_file:
+                    output_file = "comparison_output.md"
+                
                 print(f"✓ Comparison complete: {output_file}")
                 return output_file
             else:
-                print(f"Error running syntopical comparison: {result.stderr}")
+                print(f"Error running syntopical comparison:")
+                print(result.stderr)
                 return None
         except Exception as e:
             print(f"Error: {e}")
@@ -133,6 +187,11 @@ class ReadingCLI:
             
         Returns:
             True if successful, False otherwise
+            
+        Note:
+            This method assumes the syntopical-reading-assistant service has a
+            library_connect.py entry point. Adjust the script name and arguments
+            based on the actual service API.
         """
         if not self.check_service_exists(self.syntopical_assistant_path, "syntopical-reading-assistant"):
             return False
@@ -143,10 +202,16 @@ class ReadingCLI:
             print(f"Error: File not found: {comparison_file}")
             return False
         
+        # Determine the script to call - adjust based on actual service interface
+        script_path = self.syntopical_assistant_path / "library_connect.py"
+        
+        if not self.check_script_exists(script_path, "library_connect.py"):
+            return False
+        
         try:
             cmd = [
                 "python",
-                str(self.syntopical_assistant_path / "library_connect.py"),
+                str(script_path),
                 comparison_file
             ]
             result = subprocess.run(cmd, cwd=self.syntopical_assistant_path, capture_output=True, text=True)
@@ -155,7 +220,8 @@ class ReadingCLI:
                 print("✓ Library connection complete")
                 return True
             else:
-                print(f"Error: {result.stderr}")
+                print(f"Error:")
+                print(result.stderr)
                 return False
         except Exception as e:
             print(f"Error: {e}")
@@ -170,6 +236,11 @@ class ReadingCLI:
             
         Returns:
             True if successful, False otherwise
+            
+        Note:
+            This method assumes the syntopical-reading-assistant service has a
+            find_gaps.py entry point. Adjust the script name and arguments based
+            on the actual service API.
         """
         if not self.check_service_exists(self.syntopical_assistant_path, "syntopical-reading-assistant"):
             return False
@@ -180,10 +251,16 @@ class ReadingCLI:
             print(f"Error: File not found: {comparison_file}")
             return False
         
+        # Determine the script to call - adjust based on actual service interface
+        script_path = self.syntopical_assistant_path / "find_gaps.py"
+        
+        if not self.check_script_exists(script_path, "find_gaps.py"):
+            return False
+        
         try:
             cmd = [
                 "python",
-                str(self.syntopical_assistant_path / "find_gaps.py"),
+                str(script_path),
                 comparison_file
             ]
             result = subprocess.run(cmd, cwd=self.syntopical_assistant_path, capture_output=True, text=True)
@@ -192,7 +269,8 @@ class ReadingCLI:
                 print("✓ Gap analysis complete")
                 return True
             else:
-                print(f"Error: {result.stderr}")
+                print(f"Error:")
+                print(result.stderr)
                 return False
         except Exception as e:
             print(f"Error: {e}")
