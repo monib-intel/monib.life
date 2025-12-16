@@ -15,6 +15,7 @@ monib.life/
 ├── services/
 │   ├── reading-assistant/   # See reading-assistant/README.md
 │   ├── resume-assistant/    # See resume-assistant/README.md
+│   ├── conversion-service/  # Ebook converter (EPUB/PDF/MOBI → Markdown)
 │   └── admin-api/           # Backend for admin interface
 ├── admin/                   # Hidden admin UI
 ├── scripts/
@@ -273,6 +274,7 @@ monib.life/
 ├── services/
 │   ├── reading-assistant/    # SUBMODULE pointing to reading-bot repo
 │   ├── resume-assistant/     # Resume generation service
+│   ├── conversion-service/   # Standalone ebook converter (EPUB, PDF, MOBI → Markdown)
 │   └── syntopical-reading-assistant/  # SUBMODULE
 ├── scripts/                  # Build and sync scripts
 └── .gitmodules               # Submodule configuration
