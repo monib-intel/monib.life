@@ -230,10 +230,6 @@ class TestFullPipeline:
         """
         pytest.skip("Requires syntopical#86 (Bridge Adapter) to be implemented")
 
-        # This test would verify the adapter transformation
-        # Once the bridge adapter is implemented, add specific assertions
-        # to verify the mapping of fields
-
     @pytest.mark.integration
     @pytest.mark.requires_services
     def test_cli_error_handling(self, unified_cli_path: Path):
@@ -247,7 +243,9 @@ class TestFullPipeline:
 
         # Should fail with helpful error message
         assert result.returncode != 0
-        assert "not found" in result.stdout.lower() or "error" in result.stdout.lower()
+        # Check both stdout and stderr for error messages
+        output = (result.stdout + result.stderr).lower()
+        assert "not found" in output or "error" in output
 
     # Helper methods
 
@@ -278,7 +276,7 @@ class TestServiceIntegration:
     @pytest.mark.integration
     @pytest.mark.requires_services
     @pytest.mark.skip(
-        reason="Requires services to be properly initialized and dependencies implemented"
+        reason="Requires reading-bot#56 (Stage 8) to be implemented"
     )
     def test_reading_assistant_output_format(self, sample_books_dir: Path):
         """
@@ -290,12 +288,12 @@ class TestServiceIntegration:
         2. Metadata is properly formatted
         3. Structure matches expected schema
         """
-        pytest.skip("Requires reading-bot#56 (Stage 8) to be implemented")
+        pass
 
     @pytest.mark.integration
     @pytest.mark.requires_services
     @pytest.mark.skip(
-        reason="Requires services to be properly initialized and dependencies implemented"
+        reason="Requires syntopical#86 (Bridge Adapter) to be implemented"
     )
     def test_syntopical_input_validation(self, mock_analytical_reading_output: Path):
         """
@@ -306,7 +304,7 @@ class TestServiceIntegration:
         2. Missing required fields are detected
         3. Helpful error messages are provided
         """
-        pytest.skip("Requires syntopical#86 (Bridge Adapter) to be implemented")
+        pass
 
 
 class TestDataFlow:
@@ -314,7 +312,7 @@ class TestDataFlow:
 
     @pytest.mark.integration
     @pytest.mark.requires_services
-    @pytest.mark.skip(reason="Requires dependencies to be implemented")
+    @pytest.mark.skip(reason="Requires both services and bridge adapter to be implemented")
     def test_analytical_to_syntopical_flow(
         self, mock_analytical_reading_output: Path
     ):
@@ -326,11 +324,11 @@ class TestDataFlow:
         2. No data loss in transformation
         3. Format conversion is bidirectional (if needed)
         """
-        pytest.skip("Requires both services and bridge adapter to be implemented")
+        pass
 
     @pytest.mark.integration
     @pytest.mark.requires_services
-    @pytest.mark.skip(reason="Requires dependencies to be implemented")
+    @pytest.mark.skip(reason="Requires services to be implemented")
     def test_multiple_books_aggregation(self, sample_books_dir: Path):
         """
         Test that multiple book analyses are correctly aggregated.
@@ -340,4 +338,4 @@ class TestDataFlow:
         2. Comparison logic handles varying numbers of books
         3. Results are properly merged
         """
-        pytest.skip("Requires services to be implemented")
+        pass
