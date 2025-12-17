@@ -107,9 +107,90 @@ make install
 # Start development
 make dev
 
+# Start admin dashboard (API + UI)
+make admin-full
+
+# Start everything (admin + Quartz)
+make admin-dev
+
 # Build for production
 make build
 ```
+
+## Admin Dashboard
+
+The admin dashboard provides a web-based interface for managing book processing jobs.
+
+### Features
+
+- **Upload Books**: Drag-and-drop EPUB file uploads
+- **Job Management**: Create, monitor, and cancel reading assistant jobs
+- **Real-time Monitoring**: Live progress tracking and log streaming
+- **Syntopical Analysis**: Run full multi-book analysis pipelines
+- **Job History**: View completed, failed, and stuck jobs
+- **System Status**: Monitor overall system health
+
+### Quick Start
+
+```bash
+# Install dependencies
+make install
+
+# Start admin dashboard (API on :3000, UI on :5173)
+make admin-full
+
+# Access the dashboard
+open http://localhost:5173
+```
+
+### API Endpoints
+
+The admin API runs on port 3000 by default:
+
+- `POST /api/upload` - Upload EPUB files
+- `POST /api/jobs/analyze` - Create reading-assistant job
+- `POST /api/jobs/analyze-syntopical` - Create syntopical analysis job
+- `GET /api/jobs` - List all jobs
+- `GET /api/jobs/{job_id}` - Get job details
+- `GET /api/jobs/{job_id}/logs` - Stream job logs (SSE)
+- `DELETE /api/jobs/{job_id}` - Cancel a job
+- `GET /health` - Health check
+
+Full API documentation: http://localhost:3000/docs
+
+### Architecture
+
+```
+Admin Dashboard
+├── admin-api/          # FastAPI backend (Python)
+│   ├── app/
+│   │   ├── main.py     # FastAPI application
+│   │   ├── models.py   # Pydantic models
+│   │   ├── jobs.py     # Job management
+│   │   ├── storage.py  # Job persistence
+│   │   └── routers/    # API endpoints
+│   └── tests/
+└── admin-ui/           # React frontend (TypeScript)
+    ├── src/
+    │   ├── App.tsx     # Main application
+    │   ├── services/   # API client
+    │   └── types/      # TypeScript types
+    └── package.json
+```
+
+### Job Processing
+
+Jobs are processed by calling the unified CLI (`cli/unified.py`) which orchestrates the reading-assistant and syntopical-reading-assistant services.
+
+Job states:
+- `queued` - Waiting to start
+- `running` - Currently processing
+- `completed` - Finished successfully
+- `failed` - Failed with error
+- `cancelled` - Cancelled by user
+- `stuck` - No progress for 30+ minutes
+
+See [admin-api/README.md](admin-api/README.md) and [admin-ui/README.md](admin-ui/README.md) for more details.
 
 ## Testing
 

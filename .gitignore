@@ -57,3 +57,9 @@ htmlcov/
 admin-api/uploads/
 admin-api/data/
 admin-api/logs/
+
+# Admin UI
+admin-ui/node_modules/
+admin-ui/dist/
+admin-ui/.env
+admin-ui/.env.local
