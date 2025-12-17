@@ -52,3 +52,8 @@ flake.lock
 htmlcov/
 .pytest_cache/
 .env
+
+# Admin API
+admin-api/uploads/
+admin-api/data/
+admin-api/logs/
