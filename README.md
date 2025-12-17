@@ -194,9 +194,76 @@ See [admin-api/README.md](admin-api/README.md) and [admin-ui/README.md](admin-ui
 
 ## Testing
 
-The project includes integration tests for the reading services pipeline.
+The project includes comprehensive test suites for the admin dashboard and reading services pipeline.
 
-### Running Tests
+### Admin Dashboard Tests
+
+The admin dashboard has **97 tests** with high coverage:
+- **Backend (pytest)**: 90% coverage (78 tests)
+- **Frontend (vitest)**: 72% coverage (19 tests)
+
+#### Running Admin Dashboard Tests
+
+**Backend Tests**:
+```bash
+cd admin-api
+
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=app --cov-report=term-missing --cov-report=html
+
+# Run specific test categories
+pytest tests/test_job_manager.py -v  # Job management
+pytest tests/test_storage.py -v      # Persistence layer
+pytest tests/test_api_integration.py -v  # API endpoints
+```
+
+**Frontend Tests**:
+```bash
+cd admin-ui
+
+# Run all tests
+npm test
+
+# Run with coverage
+npm test:coverage
+
+# Run in watch mode
+npm test -- --watch
+
+# Run with UI
+npm test:ui
+```
+
+#### Test Categories
+
+**Backend**:
+- ✅ Job creation and state transitions
+- ✅ Job timeout detection (30+ min → STUCK)
+- ✅ CLI command building for different job types
+- ✅ Progress tracking from subprocess output
+- ✅ Error handling and job failure states
+- ✅ Job cancellation and cleanup
+- ✅ API endpoints (upload, jobs, health, logs)
+- ✅ End-to-end job execution workflows
+- ✅ Concurrent job handling
+
+**Frontend**:
+- ✅ Upload form with drag-and-drop
+- ✅ Job queue display and filtering
+- ✅ Real-time progress updates
+- ✅ Live log viewer with SSE
+- ✅ System status indicators
+- ✅ Error message handling
+- ✅ Complete upload → create → monitor flows
+- ✅ Multiple concurrent jobs
+- ✅ Job cancellation
+
+See [admin-api/TESTING.md](admin-api/TESTING.md) for detailed testing documentation.
+
+### Integration Tests
 
 ```bash
 # Install pytest
@@ -219,6 +286,8 @@ See [tests/README.md](tests/README.md) for detailed testing documentation.
 
 ### Test Status
 
+- ✅ Admin dashboard backend tests (90% coverage, 78 tests)
+- ✅ Admin dashboard frontend tests (72% coverage, 19 tests)
 - ✅ Unified CLI orchestration tests
 - ⚠️ Full pipeline tests (requires reading-bot#56 and syntopical#86)
 - ⚠️ Service integration tests (requires submodules to be initialized)
