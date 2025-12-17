@@ -498,7 +498,7 @@ class TestBatchProcessing:
         )
         # Will fail due to missing service, but should accept the worker count
         # (error should be about service, not about worker count)
-        assert "workers" not in result.stderr.lower() or "worker" not in result.stderr.lower()
+        assert "workers" not in result.stderr.lower() and "worker" not in result.stderr.lower()
 
     # Helper methods
 

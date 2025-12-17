@@ -385,11 +385,11 @@ class ReadingCLI:
                         if progress:
                             print(f"✗ [{completed}/{len(epub_files)}] Failed: {epub_file}")
                 except Exception as e:
+                    completed += 1
                     failed += 1
                     results.append((book, None))
                     if progress:
-                        print(f"✗ [{completed + 1}/{len(epub_files)}] Error processing {book}: {e}")
-                    completed += 1
+                        print(f"✗ [{completed}/{len(epub_files)}] Error processing {book}: {e}")
         
         # Summary
         successful = completed - failed
