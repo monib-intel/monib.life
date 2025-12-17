@@ -111,6 +111,37 @@ make dev
 make build
 ```
 
+## Testing
+
+The project includes integration tests for the reading services pipeline.
+
+### Running Tests
+
+```bash
+# Install pytest
+pip install pytest
+
+# Run all tests
+pytest
+
+# Run with verbose output
+pytest -v
+
+# Run only integration tests
+pytest -m integration
+
+# Run specific test file
+pytest tests/integration/test_full_pipeline.py
+```
+
+See [tests/README.md](tests/README.md) for detailed testing documentation.
+
+### Test Status
+
+- ✅ Unified CLI orchestration tests
+- ⚠️ Full pipeline tests (requires reading-bot#56 and syntopical#86)
+- ⚠️ Service integration tests (requires submodules to be initialized)
+
 ## Content Workflow
 
 ### Publishing Content
