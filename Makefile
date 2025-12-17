@@ -4,13 +4,16 @@
 #   - vault/   - Obsidian vault (content source)
 #   - website/ - Quartz website (build system)
 
-.PHONY: all install dev build test clean deploy sync help admin-server admin-dev add-book process-books stop convert convert-help
+.PHONY: all install dev build test clean deploy sync help admin-server admin-dev admin-ui admin-full add-book process-books stop convert convert-help
 
 # Website directory (submodule)
 WEBSITE_DIR := website
 CONTENT_DIR := vault
 CONVERSION_SERVICE_DIR := services/conversion-service
+ADMIN_API_DIR := admin-api
+ADMIN_UI_DIR := admin-ui
 ADMIN_PORT := 3000
+ADMIN_UI_PORT := 5173
 QUARTZ_PORT := 8080
 
 # Default target
@@ -22,6 +25,10 @@ install:
 	@echo "Updating submodules..."
 	git submodule update --init --recursive
 	cd $(WEBSITE_DIR) && npm install
+	@echo "Installing admin API dependencies..."
+	cd $(ADMIN_API_DIR) && pip install -e .
+	@echo "Installing admin UI dependencies..."
+	cd $(ADMIN_UI_DIR) && npm install
 
 # Start development server with hot reload
 dev: install
@@ -77,20 +84,36 @@ sync-vault:
 	@echo "Syncing vault to website/content..."
 	@./scripts/sync-vault.sh
 
-# Start admin server only
+# Start admin API server only
 admin-server:
-	@echo "Starting admin server on port $(ADMIN_PORT)..."
-	@echo "Access at: http://localhost:$(ADMIN_PORT)"
-	@echo "Default password: admin (set ADMIN_PASSWORD env var for production)"
-	cd services/reading-assistant && python server.py
+	@echo "Starting admin API server on port $(ADMIN_PORT)..."
+	@echo "Access API docs at: http://localhost:$(ADMIN_PORT)/docs"
+	cd $(ADMIN_API_DIR) && uvicorn app.main:app --reload --port $(ADMIN_PORT)
 
-# Start admin server + Quartz dev server (runs both in parallel)
+# Start admin UI only
+admin-ui:
+	@echo "Starting admin UI on port $(ADMIN_UI_PORT)..."
+	@echo "Access at: http://localhost:$(ADMIN_UI_PORT)"
+	cd $(ADMIN_UI_DIR) && npm run dev
+
+# Start admin API + UI (runs both in parallel)
+admin-full:
+	@echo "Starting admin API (port $(ADMIN_PORT)) and admin UI (port $(ADMIN_UI_PORT))..."
+	@echo "Admin UI: http://localhost:$(ADMIN_UI_PORT)"
+	@echo "Admin API: http://localhost:$(ADMIN_PORT)/docs"
+	@trap 'kill 0' EXIT; \
+	cd $(ADMIN_API_DIR) && uvicorn app.main:app --reload --port $(ADMIN_PORT) & \
+	cd $(ADMIN_UI_DIR) && npm run dev
+
+# Start admin + Quartz dev server (runs all in parallel)
 admin-dev: sync-vault
-	@echo "Starting admin server (port $(ADMIN_PORT)) and Quartz dev server (port $(QUARTZ_PORT))..."
-	@echo "Admin UI: http://localhost:$(ADMIN_PORT)"
+	@echo "Starting admin API (port $(ADMIN_PORT)), admin UI (port $(ADMIN_UI_PORT)), and Quartz dev server (port $(QUARTZ_PORT))..."
+	@echo "Admin UI: http://localhost:$(ADMIN_UI_PORT)"
+	@echo "Admin API: http://localhost:$(ADMIN_PORT)/docs"
 	@echo "Quartz site: http://localhost:$(QUARTZ_PORT)"
 	@trap 'kill 0' EXIT; \
-	cd services/reading-assistant && python server.py & \
+	cd $(ADMIN_API_DIR) && uvicorn app.main:app --reload --port $(ADMIN_PORT) & \
+	cd $(ADMIN_UI_DIR) && npm run dev & \
 	cd $(WEBSITE_DIR) && npx quartz build --serve --port $(QUARTZ_PORT)
 
 # Add a book to processing queue
@@ -111,7 +134,8 @@ process-books:
 # Kill all services
 stop:
 	@echo "Stopping all services..."
-	@pkill -f "python server.py" || true
+	@pkill -f "uvicorn app.main:app" || true
+	@pkill -f "vite" || true
 	@pkill -f "quartz" || true
 	@pkill -f "node" || true
 	@echo "All services stopped"
@@ -137,7 +161,7 @@ help:
 	@echo "Usage: make <target>"
 	@echo ""
 	@echo "Build & Deployment Targets:"
-	@echo "  install      Install dependencies (npm install)"
+	@echo "  install      Install dependencies (npm, pip)"
 	@echo "  dev          Start development server with hot reload"
 	@echo "  build        Build site for production"
 	@echo "  test         Run tests and validate configuration"
@@ -145,13 +169,17 @@ help:
 	@echo "  sync         Sync external project documentation"
 	@echo "  deploy       Build and deploy to production (placeholder)"
 	@echo ""
-	@echo "Admin & Services Targets:"
-	@echo "  admin-server Start admin server only (port $(ADMIN_PORT))"
-	@echo "  admin-dev    Start admin server + Quartz dev server"
+	@echo "Admin Dashboard Targets:"
+	@echo "  admin-server Start admin API server only (port $(ADMIN_PORT))"
+	@echo "  admin-ui     Start admin UI only (port $(ADMIN_UI_PORT))"
+	@echo "  admin-full   Start admin API + UI (ports $(ADMIN_PORT), $(ADMIN_UI_PORT))"
+	@echo "  admin-dev    Start admin API + UI + Quartz dev server"
+	@echo "  stop         Stop all running services"
+	@echo ""
+	@echo "Content & Services Targets:"
 	@echo "  sync-vault   Sync vault content to website/content"
 	@echo "  add-book     Add a book to processing queue (FILE=path/to/book)"
 	@echo "  process-books Process all books in queue"
-	@echo "  stop         Stop all running services"
 	@echo ""
 	@echo "Conversion Service Targets:"
 	@echo "  convert      Convert ebook to Markdown (FILE=path/to/book.epub [OUTPUT=./output])"
@@ -162,9 +190,8 @@ help:
 	@echo "Examples:"
 	@echo "  make install                       # Install all dependencies"
 	@echo "  make dev                           # Start local development server"
-	@echo "  make build                         # Build production site"
-	@echo "  make test                          # Run all tests"
-	@echo "  make admin-dev                     # Start admin + dev servers"
+	@echo "  make admin-full                    # Start admin dashboard (API + UI)"
+	@echo "  make admin-dev                     # Start everything (admin + Quartz)"
 	@echo "  make add-book FILE=book.epub       # Add book to queue"
 	@echo "  make convert FILE=book.epub        # Convert book to Markdown"
 	@echo "  make stop                          # Stop all services"
