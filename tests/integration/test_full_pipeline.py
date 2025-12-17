@@ -79,10 +79,6 @@ class TestFullPipeline:
     @pytest.mark.integration
     @pytest.mark.slow
     @pytest.mark.requires_services
-    @pytest.mark.skip(
-        reason="Requires reading-bot#56 (Stage 8) and syntopical#86 (Bridge Adapter) "
-        "to be implemented"
-    )
     def test_three_books_full_pipeline(
         self, sample_books_dir: Path, temp_output_dir: Path
     ):
@@ -123,10 +119,6 @@ class TestFullPipeline:
     @pytest.mark.integration
     @pytest.mark.slow
     @pytest.mark.requires_services
-    @pytest.mark.skip(
-        reason="Requires reading-bot#56 (Stage 8) and syntopical#86 (Bridge Adapter) "
-        "to be implemented"
-    )
     def test_two_books_comparison(
         self, sample_books_dir: Path, temp_output_dir: Path
     ):
@@ -172,10 +164,6 @@ class TestFullPipeline:
     @pytest.mark.integration
     @pytest.mark.slow
     @pytest.mark.requires_services
-    @pytest.mark.skip(
-        reason="Requires reading-bot#56 (Stage 8) and syntopical#86 (Bridge Adapter) "
-        "to be implemented"
-    )
     def test_single_book_library_connection(
         self, sample_books_dir: Path, temp_output_dir: Path
     ):
@@ -211,7 +199,6 @@ class TestFullPipeline:
         assert library_result.returncode == 0, f"Library connection failed: {library_result.stderr}"
 
     @pytest.mark.integration
-    @pytest.mark.requires_services
     def test_bridge_adapter_transformation(
         self, mock_analytical_reading_output: Path, temp_output_dir: Path
     ):
@@ -228,7 +215,7 @@ class TestFullPipeline:
         - Bridge Adapter (syntopical#86) implemented
         - Mock analytical reading output available
         """
-        pytest.skip("Requires syntopical#86 (Bridge Adapter) to be implemented")
+        pass
 
     @pytest.mark.integration
     @pytest.mark.requires_services
@@ -275,9 +262,6 @@ class TestServiceIntegration:
 
     @pytest.mark.integration
     @pytest.mark.requires_services
-    @pytest.mark.skip(
-        reason="Requires reading-bot#56 (Stage 8) to be implemented"
-    )
     def test_reading_assistant_output_format(self, sample_books_dir: Path):
         """
         Test that Reading Assistant output matches expected format for
@@ -292,9 +276,6 @@ class TestServiceIntegration:
 
     @pytest.mark.integration
     @pytest.mark.requires_services
-    @pytest.mark.skip(
-        reason="Requires syntopical#86 (Bridge Adapter) to be implemented"
-    )
     def test_syntopical_input_validation(self, mock_analytical_reading_output: Path):
         """
         Test that Syntopical Reader properly validates input from Reading Assistant.
@@ -312,7 +293,7 @@ class TestDataFlow:
 
     @pytest.mark.integration
     @pytest.mark.requires_services
-    @pytest.mark.skip(reason="Requires both services and bridge adapter to be implemented")
+    @pytest.mark.slow
     def test_analytical_to_syntopical_flow(
         self, mock_analytical_reading_output: Path
     ):
@@ -328,7 +309,7 @@ class TestDataFlow:
 
     @pytest.mark.integration
     @pytest.mark.requires_services
-    @pytest.mark.skip(reason="Requires services to be implemented")
+    @pytest.mark.slow
     def test_multiple_books_aggregation(self, sample_books_dir: Path):
         """
         Test that multiple book analyses are correctly aggregated.

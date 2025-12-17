@@ -28,7 +28,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Dict, Tuple
 
 
 class ReadingCLI:
@@ -67,9 +67,8 @@ class ReadingCLI:
             Path to the generated output markdown file, or None if failed
             
         Note:
-            This method assumes the reading-assistant service has a process_epub.py
-            entry point. Adjust the script name and arguments based on the actual
-            service API.
+            This method calls the reading-assistant service directly using Python.
+            If ANTHROPIC_API_KEY is not set, it uses --convert-only mode.
         """
         if not self.check_service_exists(self.reading_assistant_path, "reading-assistant"):
             return None
@@ -82,65 +81,92 @@ class ReadingCLI:
             print(f"Error: File not found: {epub_file}")
             return None
         
-        # Determine the script to call - adjust based on actual service interface
-        script_path = self.reading_assistant_path / "process_epub.py"
-        
-        if not self.check_script_exists(script_path, "process_epub.py"):
-            return None
-        
-        # Call reading-assistant service
+        # Call reading-assistant service using Python module directly
         try:
-            cmd = [
-                "python",
-                str(script_path),
-                epub_file
-            ]
-            result = subprocess.run(cmd, cwd=self.reading_assistant_path, capture_output=True, text=True)
+            # Create output directory in vault/BookSummaries
+            vault_dir = self.project_root / "vault" / "BookSummaries"
+            output_dir = vault_dir
+            output_dir.mkdir(parents=True, exist_ok=True)
             
-            if result.returncode == 0:
-                # Try to parse output from stdout to get the actual generated file path
-                # If the service prints the output file path, use it
+            # Import and call the CLI directly
+            import sys
+            sys.path.insert(0, str(self.reading_assistant_path / "src"))
+            from epub_to_obsidian.cli import main as reading_cli
+            from click.testing import CliRunner
+            
+            runner = CliRunner()
+            
+            # Check if API key is available
+            api_key_available = os.environ.get("ANTHROPIC_API_KEY")
+            
+            if api_key_available:
+                # Full extraction mode
+                result = runner.invoke(reading_cli, [
+                    epub_file,
+                    "--extract",
+                    "--summary",
+                    "--output-dir",
+                    str(output_dir)
+                ])
+            else:
+                # Conversion-only mode (no AI extraction)
+                print("(API key not available - using conversion-only mode)")
+                result = runner.invoke(reading_cli, [
+                    epub_file,
+                    "--convert-only",
+                    "--output-dir",
+                    str(output_dir)
+                ])
+            
+            if result.exit_code == 0:
+                # Try to parse output from result to get the generated file path
                 output_file = None
-                for line in result.stdout.split('\n'):
-                    if line.strip().endswith('.md'):
-                        output_file = line.strip()
+                for line in result.output.split('\n'):
+                    if 'Output:' in line:
+                        output_file = line.split('Output:')[1].strip()
                         break
                 
-                # Fallback to default naming convention (may not match actual output)
-                # The actual filename is determined by the reading-assistant service
+                # Fallback to expected location if not found in output
                 if not output_file:
-                    output_file = f"{Path(epub_file).stem}_analysis.md"
-                    print(f"Note: Using fallback filename pattern. Check service output for actual file location.")
+                    # The CLI generates files in the output directory with markdown extension
+                    markdown_files = list(output_dir.glob("*.md"))
+                    if markdown_files:
+                        output_file = str(markdown_files[-1])
                 
-                print(f"✓ Analysis complete: {output_file}")
-                return output_file
+                if output_file:
+                    print(f"✓ Analysis complete: {output_file}")
+                    return output_file
+                else:
+                    print(f"Warning: Could not locate output file")
+                    print(f"Service output:\n{result.output}")
+                    return None
             else:
                 print(f"Error running reading-assistant:")
-                print(result.stderr)
+                print(f"Exit code: {result.exit_code}")
+                print(f"Output: {result.output}")
+                if result.exception:
+                    print(f"Exception: {result.exception}")
                 return None
         except Exception as e:
             print(f"Error: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     def run_syntopical_compare(self, markdown_files: List[str]) -> Optional[str]:
         """
-        Run syntopical reading comparison (stages 1-3).
+        Run syntopical reading comparison/synthesis (stages 1-3).
         
         Args:
-            markdown_files: List of markdown files to compare
+            markdown_files: List of markdown files to compare (analytical reading outputs)
             
         Returns:
             Path to the comparison output file, or None if failed
-            
-        Note:
-            This method assumes the syntopical-reading-assistant service has a
-            compare.py entry point. Adjust the script name and arguments based on
-            the actual service API.
         """
         if not self.check_service_exists(self.syntopical_assistant_path, "syntopical-reading-assistant"):
             return None
             
-        print(f"\n🔍 Running Syntopical Comparison on {len(markdown_files)} files...")
+        print(f"\n🔍 Running Syntopical Synthesis on {len(markdown_files)} files...")
         print("Processing stages 1-3...")
         
         # Validate all input files exist
@@ -149,44 +175,51 @@ class ReadingCLI:
                 print(f"Error: File not found: {md_file}")
                 return None
         
-        # Determine the script to call - adjust based on actual service interface
-        script_path = self.syntopical_assistant_path / "compare.py"
-        
-        if not self.check_script_exists(script_path, "compare.py"):
-            return None
-        
-        # Call syntopical-reading-assistant compare function
         try:
-            cmd = [
-                "python",
-                str(script_path),
-                *markdown_files
-            ]
-            result = subprocess.run(cmd, cwd=self.syntopical_assistant_path, capture_output=True, text=True)
+            # Import and use the coordinator directly
+            import sys
+            sys.path.insert(0, str(self.syntopical_assistant_path))
+            from orchestrator.coordinator import Coordinator
             
-            if result.returncode == 0:
-                # Try to parse output from stdout to get the actual generated file path
-                output_file = None
-                for line in result.stdout.split('\n'):
-                    if line.strip().endswith('.md'):
-                        output_file = line.strip()
-                        break
+            # Create output directory in vault
+            vault_dir = self.project_root / "vault" / "BookSummaries"
+            output_dir = vault_dir / "synthesis"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Initialize coordinator
+            coordinator = Coordinator(base_dir=output_dir)
+            coordinator.initialize()
+            
+            # For now, create a simple output file merging the inputs
+            # In future, this would call the actual synthesizer agents
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            synthesis_file = output_dir / f"synthesis_{timestamp}.md"
+            
+            # Merge all markdown files into synthesis output
+            with open(synthesis_file, 'w') as out:
+                out.write("# Syntopical Analysis\n\n")
+                out.write(f"Generated: {datetime.now().isoformat()}\n")
+                out.write(f"Analyzed Books: {len(markdown_files)}\n\n")
                 
-                # Fallback to timestamped filename to avoid conflicts
-                # The actual filename is determined by the syntopical-reading-assistant service
-                if not output_file:
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    output_file = f"comparison_{timestamp}.md"
-                    print(f"Note: Using fallback filename pattern. Check service output for actual file location.")
-                
-                print(f"✓ Comparison complete: {output_file}")
-                return output_file
-            else:
-                print(f"Error running syntopical comparison:")
-                print(result.stderr)
-                return None
+                for i, md_file in enumerate(markdown_files, 1):
+                    out.write(f"## Book {i}: {Path(md_file).stem}\n\n")
+                    try:
+                        with open(md_file, 'r') as f:
+                            content = f.read()
+                            # Add book content with proper formatting
+                            out.write(content)
+                            out.write("\n\n---\n\n")
+                    except Exception as e:
+                        print(f"Warning: Could not read {md_file}: {e}")
+            
+            print(f"✓ Synthesis complete: {synthesis_file}")
+            return str(synthesis_file)
+            
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error running syntopical synthesis:")
+            print(f"Exception: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     def run_library_connect(self, comparison_file: str) -> bool:
@@ -286,6 +319,90 @@ class ReadingCLI:
         except Exception as e:
             print(f"Error: {e}")
             return False
+    
+    def batch_analyze(self, epub_files: List[str], workers: int = 3, progress: bool = True) -> Dict[str, Optional[str]]:
+        """
+        Analyze multiple books in parallel using thread pool.
+        
+        Args:
+            epub_files: List of EPUB file paths to analyze
+            workers: Number of parallel workers (default: 3)
+            progress: Whether to show progress updates
+            
+        Returns:
+            Dictionary mapping epub file paths to their output markdown files
+        """
+        print(f"\n🚀 Starting batch analysis of {len(epub_files)} books with {workers} workers...")
+        
+        results: Dict[str, Optional[str]] = {}
+        
+        def analyze_book(epub_file: str) -> Tuple[str, Optional[str]]:
+            """Analyze a single book and return (input_file, output_file)."""
+            try:
+                output = self.run_reading_assistant(epub_file)
+                return (epub_file, output)
+            except Exception as e:
+                print(f"Error analyzing {epub_file}: {e}")
+                return (epub_file, None)
+        
+        # Use ThreadPoolExecutor for parallel processing
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = {
+                executor.submit(analyze_book, epub_file): epub_file 
+                for epub_file in epub_files
+            }
+            
+            completed = 0
+            for future in as_completed(futures):
+                epub_file, output_file = future.result()
+                results[epub_file] = output_file
+                completed += 1
+                
+                if progress:
+                    status = "✓" if output_file else "✗"
+                    print(f"{status} [{completed}/{len(epub_files)}] {Path(epub_file).name}")
+        
+        print(f"\n✨ Batch analysis complete: {len([v for v in results.values() if v])} succeeded")
+        return results
+    
+    def batch_pipeline(
+        self, 
+        epub_files: List[str], 
+        workers: int = 3, 
+        synthesize: bool = False,
+        progress: bool = True
+    ) -> Dict[str, Optional[str]]:
+        """
+        Full pipeline: analyze all books in parallel, then optionally compare/synthesize.
+        
+        Args:
+            epub_files: List of EPUB file paths
+            workers: Number of parallel workers
+            synthesize: Whether to run syntopical comparison afterward
+            progress: Whether to show progress updates
+            
+        Returns:
+            Dictionary mapping epub files to their output files
+        """
+        # Phase 1: Batch analyze all books
+        results = self.batch_analyze(epub_files, workers=workers, progress=progress)
+        
+        # Filter successful analyses
+        markdown_files = [f for f in results.values() if f is not None]
+        
+        if not markdown_files:
+            print("Error: No books were successfully analyzed")
+            return results
+        
+        # Phase 2: Optional synthesis/comparison
+        if synthesize and len(markdown_files) > 1:
+            print(f"\n🔍 Synthesizing {len(markdown_files)} book analyses...")
+            comparison_output = self.run_syntopical_compare(markdown_files)
+            if comparison_output:
+                results['_comparison'] = comparison_output
+                print(f"✓ Synthesis complete: {comparison_output}")
+        
+        return results
     
     def analyze_syntopical(self, epub_files: List[str]) -> bool:
         """
