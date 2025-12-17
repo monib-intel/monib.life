@@ -15,15 +15,20 @@ Usage:
     reading compare output1.md output2.md output3.md
     reading library-connect comparison.md
     reading find-gaps comparison.md
+    
+    # Batch/parallel processing
+    reading batch-analyze book1.epub book2.epub book3.epub --workers 3
+    reading batch-pipeline *.epub --workers 5 --synthesize
 """
 
 import argparse
 import os
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 
 class ReadingCLI:
@@ -328,6 +333,134 @@ class ReadingCLI:
         print("\n✓ Full syntopical analysis pipeline complete!")
         print(f"Output: {comparison_file}")
         return True
+    
+    def batch_analyze(
+        self, 
+        epub_files: List[str], 
+        workers: int = 3, 
+        progress: bool = False
+    ) -> List[Tuple[str, Optional[str]]]:
+        """
+        Batch analyze multiple EPUB files in parallel.
+        
+        Args:
+            epub_files: List of EPUB files to analyze
+            workers: Number of parallel workers (default: 3)
+            progress: Show progress reporting (default: False)
+            
+        Returns:
+            List of tuples (epub_file, output_file or None)
+        """
+        print(f"\n📚 Batch analyzing {len(epub_files)} books with {workers} workers...")
+        
+        results = []
+        completed = 0
+        failed = 0
+        
+        def process_single_book(epub_file: str) -> Tuple[str, Optional[str]]:
+            """Process a single book and return result."""
+            return (epub_file, self.run_reading_assistant(epub_file))
+        
+        # Use ThreadPoolExecutor for I/O-bound tasks
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            # Submit all tasks
+            future_to_book = {
+                executor.submit(process_single_book, book): book 
+                for book in epub_files
+            }
+            
+            # Process completed tasks
+            for future in as_completed(future_to_book):
+                book = future_to_book[future]
+                try:
+                    epub_file, output_file = future.result()
+                    results.append((epub_file, output_file))
+                    completed += 1
+                    
+                    if output_file:
+                        if progress:
+                            print(f"✓ [{completed}/{len(epub_files)}] Completed: {epub_file}")
+                    else:
+                        failed += 1
+                        if progress:
+                            print(f"✗ [{completed}/{len(epub_files)}] Failed: {epub_file}")
+                except Exception as e:
+                    failed += 1
+                    results.append((book, None))
+                    if progress:
+                        print(f"✗ [{completed + 1}/{len(epub_files)}] Error processing {book}: {e}")
+                    completed += 1
+        
+        # Summary
+        successful = completed - failed
+        print(f"\n📊 Batch analysis complete:")
+        print(f"   ✓ Successful: {successful}/{len(epub_files)}")
+        print(f"   ✗ Failed: {failed}/{len(epub_files)}")
+        
+        return results
+    
+    def batch_pipeline(
+        self,
+        epub_files: List[str],
+        workers: int = 5,
+        synthesize: bool = False,
+        progress: bool = False
+    ) -> bool:
+        """
+        Run full pipeline with batch processing: analyze + synthesize.
+        
+        Args:
+            epub_files: List of EPUB files to analyze
+            workers: Number of parallel workers (default: 5)
+            synthesize: Run syntopical synthesis after analysis (default: False)
+            progress: Show progress reporting (default: False)
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        print(f"\n🚀 Starting batch pipeline...")
+        print(f"Books: {len(epub_files)}, Workers: {workers}, Synthesize: {synthesize}")
+        
+        # Step 1: Batch analyze all books
+        results = self.batch_analyze(epub_files, workers, progress)
+        
+        # Extract successful analyses
+        analyzed_files = [output for _, output in results if output is not None]
+        
+        if not analyzed_files:
+            print("\n❌ Error: No books were successfully analyzed.")
+            return False
+        
+        if len(analyzed_files) < len(epub_files):
+            print(f"\n⚠️  Warning: Only {len(analyzed_files)}/{len(epub_files)} books were successfully analyzed.")
+        
+        # Step 2: Optionally run syntopical synthesis
+        if synthesize:
+            print(f"\n🔍 Running syntopical synthesis on {len(analyzed_files)} analyses...")
+            
+            # Compare analyzed files
+            comparison_file = self.run_syntopical_compare(analyzed_files)
+            if not comparison_file:
+                print("❌ Error: Comparison failed.")
+                return False
+            
+            # Connect to library
+            if not self.run_library_connect(comparison_file):
+                print("⚠️  Warning: Library connection step failed.")
+                print(f"You can retry with: reading library-connect {comparison_file}")
+            
+            # Find gaps
+            if not self.run_find_gaps(comparison_file):
+                print("⚠️  Warning: Gap analysis step failed.")
+                print(f"You can retry with: reading find-gaps {comparison_file}")
+            
+            print(f"\n✓ Batch pipeline complete with synthesis!")
+            print(f"Comparison output: {comparison_file}")
+        else:
+            print(f"\n✓ Batch analysis complete!")
+            print(f"Analyzed {len(analyzed_files)} books successfully.")
+        
+        return True
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -346,6 +479,12 @@ Examples:
   reading compare output1.md output2.md           # Syntopical comparison (stages 1-3)
   reading library-connect comparison.md            # Connect to library (stage 4)
   reading find-gaps comparison.md                  # Find gaps (stage 5)
+
+  # Batch/parallel processing
+  reading batch-analyze book1.epub book2.epub book3.epub --workers 3
+  reading batch-analyze books/*.epub --workers 5 --progress
+  reading batch-pipeline *.epub --workers 5 --synthesize
+  reading batch-pipeline books/*.epub --workers 3 --progress
 
 For more information, see cli/README.md
         """
@@ -405,6 +544,55 @@ For more information, see cli/README.md
         help='Comparison markdown file'
     )
     
+    # batch-analyze command (parallel processing)
+    batch_analyze_parser = subparsers.add_parser(
+        'batch-analyze',
+        help='Batch analyze multiple books in parallel'
+    )
+    batch_analyze_parser.add_argument(
+        'books',
+        nargs='+',
+        help='EPUB files to analyze in parallel'
+    )
+    batch_analyze_parser.add_argument(
+        '--workers',
+        type=int,
+        default=3,
+        help='Number of parallel workers (default: 3)'
+    )
+    batch_analyze_parser.add_argument(
+        '--progress',
+        action='store_true',
+        help='Show progress reporting'
+    )
+    
+    # batch-pipeline command (full pipeline with parallel processing)
+    batch_pipeline_parser = subparsers.add_parser(
+        'batch-pipeline',
+        help='Run full pipeline with batch processing: analyze + synthesize'
+    )
+    batch_pipeline_parser.add_argument(
+        'books',
+        nargs='+',
+        help='EPUB files to process in parallel'
+    )
+    batch_pipeline_parser.add_argument(
+        '--workers',
+        type=int,
+        default=5,
+        help='Number of parallel workers (default: 5)'
+    )
+    batch_pipeline_parser.add_argument(
+        '--synthesize',
+        action='store_true',
+        help='Run syntopical synthesis after analysis'
+    )
+    batch_pipeline_parser.add_argument(
+        '--progress',
+        action='store_true',
+        help='Show progress reporting'
+    )
+    
     return parser
 
 
@@ -438,6 +626,21 @@ def main():
             
         elif args.command == 'find-gaps':
             success = cli.run_find_gaps(args.comparison)
+            sys.exit(0 if success else 1)
+            
+        elif args.command == 'batch-analyze':
+            results = cli.batch_analyze(args.books, args.workers, args.progress)
+            # Exit with success if at least one book was analyzed
+            success = any(output is not None for _, output in results)
+            sys.exit(0 if success else 1)
+            
+        elif args.command == 'batch-pipeline':
+            success = cli.batch_pipeline(
+                args.books, 
+                args.workers, 
+                args.synthesize, 
+                args.progress
+            )
             sys.exit(0 if success else 1)
             
     except KeyboardInterrupt:
