@@ -6,6 +6,7 @@ import asyncio
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from ..jobs import JobManager
@@ -14,6 +15,17 @@ from ..models import Job, JobCreate, JobList, JobStatus, JobType, SystemStatus
 from ..storage import JobStorage
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
+
+
+class AnalyzeRequest(BaseModel):
+    """Request model for analyze job."""
+    file_paths: List[str]
+
+
+class SyntopicalRequest(BaseModel):
+    """Request model for syntopical analysis job."""
+    file_paths: List[str]
+
 
 # Dependencies will be injected from main app
 _job_manager: Optional[JobManager] = None
@@ -43,24 +55,24 @@ def init_dependencies(job_manager: JobManager, storage: JobStorage):
 
 @router.post("/analyze", response_model=Job)
 async def create_analyze_job(
-    file_paths: List[str],
+    request: AnalyzeRequest,
     job_manager: JobManager = Depends(get_job_manager)
 ):
     """Create a reading-assistant analysis job.
     
     Args:
-        file_paths: List of file paths to analyze
+        request: Analysis request with file paths
         job_manager: Job manager instance
         
     Returns:
         Created job
     """
-    if not file_paths:
+    if not request.file_paths:
         raise HTTPException(status_code=400, detail="At least one file path required")
     
     job = job_manager.create_job(
         job_type=JobType.ANALYZE,
-        file_paths=file_paths
+        file_paths=request.file_paths
     )
     
     # Start the job asynchronously
@@ -71,19 +83,19 @@ async def create_analyze_job(
 
 @router.post("/analyze-syntopical", response_model=Job)
 async def create_syntopical_job(
-    file_paths: List[str],
+    request: SyntopicalRequest,
     job_manager: JobManager = Depends(get_job_manager)
 ):
     """Create a full syntopical pipeline job.
     
     Args:
-        file_paths: List of file paths to analyze
+        request: Syntopical request with file paths
         job_manager: Job manager instance
         
     Returns:
         Created job
     """
-    if not file_paths or len(file_paths) < 2:
+    if not request.file_paths or len(request.file_paths) < 2:
         raise HTTPException(
             status_code=400,
             detail="At least two file paths required for syntopical analysis"
@@ -91,7 +103,7 @@ async def create_syntopical_job(
     
     job = job_manager.create_job(
         job_type=JobType.ANALYZE_SYNTOPICAL,
-        file_paths=file_paths
+        file_paths=request.file_paths
     )
     
     # Start the job asynchronously

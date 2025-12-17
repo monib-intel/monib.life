@@ -2,6 +2,10 @@
 Tests for the admin API.
 """
 
+import os
+import tempfile
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -10,8 +14,16 @@ from app.main import app
 
 @pytest.fixture
 def client():
-    """Create test client."""
-    return TestClient(app)
+    """Create test client with temporary data directory."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Set environment variables for test
+        os.environ['DATA_DIR'] = tmpdir
+        os.environ['UPLOAD_DIR'] = str(Path(tmpdir) / 'uploads')
+        os.environ['JOB_TIMEOUT'] = '60'
+        
+        # Create test client
+        with TestClient(app) as client:
+            yield client
 
 
 def test_health_check(client):
@@ -40,6 +52,8 @@ def test_list_jobs_empty(client):
     data = response.json()
     assert "jobs" in data
     assert "total" in data
+    assert data["total"] == 0
+    assert len(data["jobs"]) == 0
 
 
 def test_system_status(client):
@@ -50,6 +64,7 @@ def test_system_status(client):
     assert "total_jobs" in data
     assert "running_jobs" in data
     assert "queued_jobs" in data
+    assert data["total_jobs"] == 0
 
 
 def test_upload_invalid_file(client):
@@ -59,3 +74,9 @@ def test_upload_invalid_file(client):
     assert response.status_code == 400
     data = response.json()
     assert "detail" in data
+
+
+def test_get_nonexistent_job(client):
+    """Test getting a job that doesn't exist."""
+    response = client.get("/api/jobs/nonexistent-id")
+    assert response.status_code == 404
