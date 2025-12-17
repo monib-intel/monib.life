@@ -15,10 +15,9 @@ monib.life/
 ├── services/
 │   ├── reading-assistant/   # See reading-assistant/README.md
 │   ├── resume-assistant/    # See resume-assistant/README.md
-│   └── syntopical-reading-assistant/  # See syntopical-reading-assistant/README.md
-├── cli/                     # Unified CLI for reading services
-│   ├── unified.py          # Main CLI orchestrator
-│   └── README.md           # CLI documentation
+│   ├── conversion-service/  # Ebook converter (EPUB/PDF/MOBI → Markdown)
+│   └── admin-api/           # Backend for admin interface
+├── admin/                   # Hidden admin UI
 ├── scripts/
 │   └── sync-projects.sh     # Syncs external project docs
 ├── project-sources.json     # External project references
@@ -128,23 +127,6 @@ Assistants write content to `vault/` with `status: draft` frontmatter:
 3. Review/edit in Obsidian
 4. Remove `status: draft` or change to `status: published`
 5. Commit and push
-
-#### Unified CLI for Reading Services
-
-The project includes a unified command-line interface that orchestrates both reading-assistant and syntopical-reading-assistant services:
-
-```bash
-# Full syntopical pipeline (analyze + compare multiple books)
-python cli/unified.py analyze-syntopical book1.epub book2.epub book3.epub
-
-# Individual commands
-python cli/unified.py analyze book1.epub              # Reading Assistant (8 stages)
-python cli/unified.py compare output1.md output2.md   # Syntopical comparison
-python cli/unified.py library-connect comparison.md   # Library integration
-python cli/unified.py find-gaps comparison.md         # Gap analysis
-```
-
-See [cli/README.md](cli/README.md) for complete documentation and examples.
 
 ### Content Filtering
 
@@ -289,12 +271,10 @@ monib.life/
 ├── flake.lock                # Locked dependencies
 ├── vault/                    # Content (Obsidian vault) - SUBMODULE
 ├── website/                  # Quartz website - SUBMODULE
-├── cli/                      # Unified CLI for reading services
-│   ├── unified.py           # CLI orchestrator
-│   └── README.md            # CLI documentation
 ├── services/
 │   ├── reading-assistant/    # SUBMODULE pointing to reading-bot repo
 │   ├── resume-assistant/     # Resume generation service
+│   ├── conversion-service/   # Standalone ebook converter (EPUB, PDF, MOBI → Markdown)
 │   └── syntopical-reading-assistant/  # SUBMODULE
 ├── scripts/                  # Build and sync scripts
 └── .gitmodules               # Submodule configuration
