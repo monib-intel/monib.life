@@ -42,17 +42,17 @@ class ReadingCLI:
     def check_service_exists(self, service_path: Path, service_name: str) -> bool:
         """Check if a service submodule is initialized."""
         if not service_path.exists() or not list(service_path.iterdir()):
-            print(f"Error: {service_name} not found or not initialized.")
-            print(f"Please initialize submodules: git submodule update --init --recursive")
+            print(f"Error: {service_name} not found or not initialized.", flush=True)
+            print(f"Please initialize submodules: git submodule update --init --recursive", flush=True)
             return False
         return True
     
     def check_script_exists(self, script_path: Path, script_name: str) -> bool:
         """Check if a service script exists."""
         if not script_path.exists():
-            print(f"Error: {script_name} not found at {script_path}")
-            print(f"The service may not have this entry point yet.")
-            print(f"Please check the service README for the correct interface.")
+            print(f"Error: {script_name} not found at {script_path}", flush=True)
+            print(f"The service may not have this entry point yet.", flush=True)
+            print(f"Please check the service README for the correct interface.", flush=True)
             return False
         return True
     
@@ -73,82 +73,127 @@ class ReadingCLI:
         if not self.check_service_exists(self.reading_assistant_path, "reading-assistant"):
             return None
             
-        print(f"\n📚 Running Reading Assistant on {epub_file}...")
-        print("Processing through 8 stages...")
+        print(f"\n📚 Running Reading Assistant on {epub_file}...", flush=True)
+        print("Processing through 8 stages...", flush=True)
         
         # Check if EPUB file exists
         if not os.path.exists(epub_file):
-            print(f"Error: File not found: {epub_file}")
+            print(f"Error: File not found: {epub_file}", flush=True)
             return None
         
-        # Call reading-assistant service using Python module directly
+        # Call reading-assistant service using subprocess for real-time output
         try:
             # Create output directory in vault/BookSummaries
             vault_dir = self.project_root / "vault" / "BookSummaries"
             output_dir = vault_dir
             output_dir.mkdir(parents=True, exist_ok=True)
             
-            # Import and call the CLI directly
-            import sys
-            sys.path.insert(0, str(self.reading_assistant_path / "src"))
-            from epub_to_obsidian.cli import main as reading_cli
-            from click.testing import CliRunner
-            
-            runner = CliRunner()
+            # Check if service has a CLI entry point
+            cli_script = self.reading_assistant_path / "src" / "epub_to_obsidian" / "cli.py"
             
             # Check if API key is available
             api_key_available = os.environ.get("ANTHROPIC_API_KEY")
             
+            # Build command to run the service
             if api_key_available:
                 # Full extraction mode
-                result = runner.invoke(reading_cli, [
+                print("📖 Starting analysis with AI extraction...", flush=True)
+                cmd = [
+                    sys.executable,
+                    str(cli_script),
                     epub_file,
                     "--extract",
                     "--summary",
                     "--output-dir",
                     str(output_dir)
-                ])
+                ]
             else:
                 # Conversion-only mode (no AI extraction)
-                print("(API key not available - using conversion-only mode)")
-                result = runner.invoke(reading_cli, [
+                print("📖 Starting conversion-only mode (API key not available)...", flush=True)
+                cmd = [
+                    sys.executable,
+                    str(cli_script),
                     epub_file,
                     "--convert-only",
                     "--output-dir",
                     str(output_dir)
-                ])
+                ]
             
-            if result.exit_code == 0:
-                # Try to parse output from result to get the generated file path
-                output_file = None
-                for line in result.output.split('\n'):
-                    if 'Output:' in line:
-                        output_file = line.split('Output:')[1].strip()
-                        break
-                
-                # Fallback to expected location if not found in output
-                if not output_file:
-                    # The CLI generates files in the output directory with markdown extension
-                    markdown_files = list(output_dir.glob("*.md"))
-                    if markdown_files:
-                        output_file = str(markdown_files[-1])
-                
-                if output_file:
-                    print(f"✓ Analysis complete: {output_file}")
+            print(f"🔧 Executing: {' '.join(cmd)}", flush=True)
+            print("=" * 80, flush=True)
+            
+            # Run subprocess with real-time output streaming
+            result = subprocess.run(
+                cmd,
+                cwd=self.reading_assistant_path,
+                capture_output=False,  # Don't capture - let it stream to stdout
+                text=True,
+                env=os.environ.copy()
+            )
+            
+            print("=" * 80, flush=True)
+            
+            if result.returncode == 0:
+                # Find the generated output file
+                markdown_files = list(output_dir.glob("*.md"))
+                if markdown_files:
+                    # Get the most recently modified file
+                    output_file = str(max(markdown_files, key=lambda p: p.stat().st_mtime))
+                    print(f"✓ Analysis complete: {output_file}", flush=True)
                     return output_file
                 else:
-                    print(f"Warning: Could not locate output file")
-                    print(f"Service output:\n{result.output}")
+                    print(f"Warning: Could not locate output file in {output_dir}", flush=True)
                     return None
             else:
-                print(f"Error running reading-assistant:")
-                print(f"Exit code: {result.exit_code}")
-                print(f"Output: {result.output}")
-                if result.exception:
-                    print(f"Exception: {result.exception}")
+                print(f"Error: Process exited with code {result.returncode}", flush=True)
                 return None
+                
+        except FileNotFoundError:
+            # If direct CLI script doesn't exist, fall back to import-based approach
+            print("⚠️  CLI script not found, trying import-based approach...", flush=True)
+            try:
+                import sys
+                sys.path.insert(0, str(self.reading_assistant_path / "src"))
+                from epub_to_obsidian.cli import main as reading_cli
+                
+                # Call directly (this will stream to stdout)
+                sys.argv = [
+                    "epub_to_obsidian",
+                    epub_file,
+                    "--extract" if api_key_available else "--convert-only",
+                    "--summary",
+                    "--output-dir",
+                    str(output_dir)
+                ] if api_key_available else [
+                    "epub_to_obsidian",
+                    epub_file,
+                    "--convert-only",
+                    "--output-dir",
+                    str(output_dir)
+                ]
+                
+                exit_code = reading_cli()
+                
+                if exit_code == 0 or exit_code is None:
+                    markdown_files = list(output_dir.glob("*.md"))
+                    if markdown_files:
+                        output_file = str(max(markdown_files, key=lambda p: p.stat().st_mtime))
+                        print(f"✓ Analysis complete: {output_file}", flush=True)
+                        return output_file
+                    else:
+                        print(f"Warning: Could not locate output file", flush=True)
+                        return None
+                else:
+                    print(f"Error: CLI exited with code {exit_code}", flush=True)
+                    return None
+            except Exception as e:
+                print(f"Error in import-based approach: {e}", flush=True)
+                import traceback
+                traceback.print_exc()
+                return None
+                
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error: {e}", flush=True)
             import traceback
             traceback.print_exc()
             return None
@@ -166,13 +211,13 @@ class ReadingCLI:
         if not self.check_service_exists(self.syntopical_assistant_path, "syntopical-reading-assistant"):
             return None
             
-        print(f"\n🔍 Running Syntopical Synthesis on {len(markdown_files)} files...")
-        print("Processing stages 1-3...")
+        print(f"\n🔍 Running Syntopical Synthesis on {len(markdown_files)} files...", flush=True)
+        print("Processing stages 1-3...", flush=True)
         
         # Validate all input files exist
         for md_file in markdown_files:
             if not os.path.exists(md_file):
-                print(f"Error: File not found: {md_file}")
+                print(f"Error: File not found: {md_file}", flush=True)
                 return None
         
         try:
@@ -210,14 +255,14 @@ class ReadingCLI:
                             out.write(content)
                             out.write("\n\n---\n\n")
                     except Exception as e:
-                        print(f"Warning: Could not read {md_file}: {e}")
+                        print(f"Warning: Could not read {md_file}: {e}", flush=True)
             
-            print(f"✓ Synthesis complete: {synthesis_file}")
+            print(f"✓ Synthesis complete: {synthesis_file}", flush=True)
             return str(synthesis_file)
             
         except Exception as e:
-            print(f"Error running syntopical synthesis:")
-            print(f"Exception: {e}")
+            print(f"Error running syntopical synthesis:", flush=True)
+            print(f"Exception: {e}", flush=True)
             import traceback
             traceback.print_exc()
             return None
@@ -240,10 +285,10 @@ class ReadingCLI:
         if not self.check_service_exists(self.syntopical_assistant_path, "syntopical-reading-assistant"):
             return False
             
-        print(f"\n📖 Connecting to library: {comparison_file}...")
+        print(f"\n📖 Connecting to library: {comparison_file}...", flush=True)
         
         if not os.path.exists(comparison_file):
-            print(f"Error: File not found: {comparison_file}")
+            print(f"Error: File not found: {comparison_file}", flush=True)
             return False
         
         # Determine the script to call - adjust based on actual service interface
@@ -261,14 +306,14 @@ class ReadingCLI:
             result = subprocess.run(cmd, cwd=self.syntopical_assistant_path, capture_output=True, text=True)
             
             if result.returncode == 0:
-                print("✓ Library connection complete")
+                print("✓ Library connection complete", flush=True)
                 return True
             else:
-                print(f"Error:")
-                print(result.stderr)
+                print(f"Error:", flush=True)
+                print(result.stderr, flush=True)
                 return False
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error: {e}", flush=True)
             return False
     
     def run_find_gaps(self, comparison_file: str) -> bool:
@@ -289,10 +334,10 @@ class ReadingCLI:
         if not self.check_service_exists(self.syntopical_assistant_path, "syntopical-reading-assistant"):
             return False
             
-        print(f"\n🔎 Finding gaps in: {comparison_file}...")
+        print(f"\n🔎 Finding gaps in: {comparison_file}...", flush=True)
         
         if not os.path.exists(comparison_file):
-            print(f"Error: File not found: {comparison_file}")
+            print(f"Error: File not found: {comparison_file}", flush=True)
             return False
         
         # Determine the script to call - adjust based on actual service interface
@@ -310,14 +355,14 @@ class ReadingCLI:
             result = subprocess.run(cmd, cwd=self.syntopical_assistant_path, capture_output=True, text=True)
             
             if result.returncode == 0:
-                print("✓ Gap analysis complete")
+                print("✓ Gap analysis complete", flush=True)
                 return True
             else:
-                print(f"Error:")
-                print(result.stderr)
+                print(f"Error:", flush=True)
+                print(result.stderr, flush=True)
                 return False
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error: {e}", flush=True)
             return False
     
     def batch_analyze(self, epub_files: List[str], workers: int = 3, progress: bool = True) -> Dict[str, Optional[str]]:
@@ -332,7 +377,7 @@ class ReadingCLI:
         Returns:
             Dictionary mapping epub file paths to their output markdown files
         """
-        print(f"\n🚀 Starting batch analysis of {len(epub_files)} books with {workers} workers...")
+        print(f"\n🚀 Starting batch analysis of {len(epub_files)} books with {workers} workers...", flush=True)
         
         results: Dict[str, Optional[str]] = {}
         
@@ -342,7 +387,7 @@ class ReadingCLI:
                 output = self.run_reading_assistant(epub_file)
                 return (epub_file, output)
             except Exception as e:
-                print(f"Error analyzing {epub_file}: {e}")
+                print(f"Error analyzing {epub_file}: {e}", flush=True)
                 return (epub_file, None)
         
         # Use ThreadPoolExecutor for parallel processing
@@ -360,9 +405,9 @@ class ReadingCLI:
                 
                 if progress:
                     status = "✓" if output_file else "✗"
-                    print(f"{status} [{completed}/{len(epub_files)}] {Path(epub_file).name}")
+                    print(f"{status} [{completed}/{len(epub_files)}] {Path(epub_file).name}", flush=True)
         
-        print(f"\n✨ Batch analysis complete: {len([v for v in results.values() if v])} succeeded")
+        print(f"\n✨ Batch analysis complete: {len([v for v in results.values() if v])} succeeded", flush=True)
         return results
     
     def batch_pipeline(
@@ -391,16 +436,16 @@ class ReadingCLI:
         markdown_files = [f for f in results.values() if f is not None]
         
         if not markdown_files:
-            print("Error: No books were successfully analyzed")
+            print("Error: No books were successfully analyzed", flush=True)
             return results
         
         # Phase 2: Optional synthesis/comparison
         if synthesize and len(markdown_files) > 1:
-            print(f"\n🔍 Synthesizing {len(markdown_files)} book analyses...")
+            print(f"\n🔍 Synthesizing {len(markdown_files)} book analyses...", flush=True)
             comparison_output = self.run_syntopical_compare(markdown_files)
             if comparison_output:
                 results['_comparison'] = comparison_output
-                print(f"✓ Synthesis complete: {comparison_output}")
+                print(f"✓ Synthesis complete: {comparison_output}", flush=True)
         
         return results
     
@@ -414,8 +459,8 @@ class ReadingCLI:
         Returns:
             True if successful, False otherwise
         """
-        print(f"\n🚀 Starting full syntopical analysis pipeline...")
-        print(f"Processing {len(epub_files)} books...\n")
+        print(f"\n🚀 Starting full syntopical analysis pipeline...", flush=True)
+        print(f"Processing {len(epub_files)} books...\n", flush=True)
         
         # Step 1: Analyze each book
         analyzed_files = []
@@ -424,31 +469,31 @@ class ReadingCLI:
             if output_file:
                 analyzed_files.append(output_file)
             else:
-                print(f"Warning: Failed to analyze {epub_file}, continuing with others...")
+                print(f"Warning: Failed to analyze {epub_file}, continuing with others...", flush=True)
         
         if not analyzed_files:
-            print("Error: No books were successfully analyzed.")
+            print("Error: No books were successfully analyzed.", flush=True)
             return False
         
         # Step 2: Compare analyzed files
         comparison_file = self.run_syntopical_compare(analyzed_files)
         if not comparison_file:
-            print("Error: Comparison failed.")
-            print("Check the error messages above for details.")
+            print("Error: Comparison failed.", flush=True)
+            print("Check the error messages above for details.", flush=True)
             return False
         
         # Step 3: Connect to library
         if not self.run_library_connect(comparison_file):
-            print("Warning: Library connection step failed.")
-            print(f"You can retry manually with: python cli/unified.py library-connect {comparison_file}")
+            print("Warning: Library connection step failed.", flush=True)
+            print(f"You can retry manually with: python cli/unified.py library-connect {comparison_file}", flush=True)
         
         # Step 4: Find gaps
         if not self.run_find_gaps(comparison_file):
-            print("Warning: Gap analysis step failed.")
-            print(f"You can retry manually with: python cli/unified.py find-gaps {comparison_file}")
+            print("Warning: Gap analysis step failed.", flush=True)
+            print(f"You can retry manually with: python cli/unified.py find-gaps {comparison_file}", flush=True)
         
-        print("\n✓ Full syntopical analysis pipeline complete!")
-        print(f"Output: {comparison_file}")
+        print("\n✓ Full syntopical analysis pipeline complete!", flush=True)
+        print(f"Output: {comparison_file}", flush=True)
         return True
     
     def batch_analyze(
@@ -468,7 +513,7 @@ class ReadingCLI:
         Returns:
             List of tuples (epub_file, output_file or None)
         """
-        print(f"\n📚 Batch analyzing {len(epub_files)} books with {workers} workers...")
+        print(f"\n📚 Batch analyzing {len(epub_files)} books with {workers} workers...", flush=True)
         
         results = []
         completed = 0
@@ -496,23 +541,23 @@ class ReadingCLI:
                     
                     if output_file:
                         if progress:
-                            print(f"✓ [{completed}/{len(epub_files)}] Completed: {epub_file}")
+                            print(f"✓ [{completed}/{len(epub_files)}] Completed: {epub_file}", flush=True)
                     else:
                         failed += 1
                         if progress:
-                            print(f"✗ [{completed}/{len(epub_files)}] Failed: {epub_file}")
+                            print(f"✗ [{completed}/{len(epub_files)}] Failed: {epub_file}", flush=True)
                 except Exception as e:
                     completed += 1
                     failed += 1
                     results.append((book, None))
                     if progress:
-                        print(f"✗ [{completed}/{len(epub_files)}] Error processing {book}: {e}")
+                        print(f"✗ [{completed}/{len(epub_files)}] Error processing {book}: {e}", flush=True)
         
         # Summary
         successful = completed - failed
-        print(f"\n📊 Batch analysis complete:")
-        print(f"   ✓ Successful: {successful}/{len(epub_files)}")
-        print(f"   ✗ Failed: {failed}/{len(epub_files)}")
+        print(f"\n📊 Batch analysis complete:", flush=True)
+        print(f"   ✓ Successful: {successful}/{len(epub_files)}", flush=True)
+        print(f"   ✗ Failed: {failed}/{len(epub_files)}", flush=True)
         
         return results
     
@@ -535,8 +580,8 @@ class ReadingCLI:
         Returns:
             True if successful, False otherwise
         """
-        print(f"\n🚀 Starting batch pipeline...")
-        print(f"Books: {len(epub_files)}, Workers: {workers}, Synthesize: {synthesize}")
+        print(f"\n🚀 Starting batch pipeline...", flush=True)
+        print(f"Books: {len(epub_files)}, Workers: {workers}, Synthesize: {synthesize}", flush=True)
         
         # Step 1: Batch analyze all books
         results = self.batch_analyze(epub_files, workers, progress)
@@ -545,37 +590,37 @@ class ReadingCLI:
         analyzed_files = [output for _, output in results if output is not None]
         
         if not analyzed_files:
-            print("\n❌ Error: No books were successfully analyzed.")
+            print("\n❌ Error: No books were successfully analyzed.", flush=True)
             return False
         
         if len(analyzed_files) < len(epub_files):
-            print(f"\n⚠️  Warning: Only {len(analyzed_files)}/{len(epub_files)} books were successfully analyzed.")
+            print(f"\n⚠️  Warning: Only {len(analyzed_files)}/{len(epub_files)} books were successfully analyzed.", flush=True)
         
         # Step 2: Optionally run syntopical synthesis
         if synthesize:
-            print(f"\n🔍 Running syntopical synthesis on {len(analyzed_files)} analyses...")
+            print(f"\n🔍 Running syntopical synthesis on {len(analyzed_files)} analyses...", flush=True)
             
             # Compare analyzed files
             comparison_file = self.run_syntopical_compare(analyzed_files)
             if not comparison_file:
-                print("❌ Error: Comparison failed.")
+                print("❌ Error: Comparison failed.", flush=True)
                 return False
             
             # Connect to library
             if not self.run_library_connect(comparison_file):
-                print("⚠️  Warning: Library connection step failed.")
-                print(f"You can retry with: reading library-connect {comparison_file}")
+                print("⚠️  Warning: Library connection step failed.", flush=True)
+                print(f"You can retry with: reading library-connect {comparison_file}", flush=True)
             
             # Find gaps
             if not self.run_find_gaps(comparison_file):
-                print("⚠️  Warning: Gap analysis step failed.")
-                print(f"You can retry with: reading find-gaps {comparison_file}")
+                print("⚠️  Warning: Gap analysis step failed.", flush=True)
+                print(f"You can retry with: reading find-gaps {comparison_file}", flush=True)
             
-            print(f"\n✓ Batch pipeline complete with synthesis!")
-            print(f"Comparison output: {comparison_file}")
+            print(f"\n✓ Batch pipeline complete with synthesis!", flush=True)
+            print(f"Comparison output: {comparison_file}", flush=True)
         else:
-            print(f"\n✓ Batch analysis complete!")
-            print(f"Analyzed {len(analyzed_files)} books successfully.")
+            print(f"\n✓ Batch analysis complete!", flush=True)
+            print(f"Analyzed {len(analyzed_files)} books successfully.", flush=True)
         
         return True
 
@@ -761,10 +806,10 @@ def main():
             sys.exit(0 if success else 1)
             
     except KeyboardInterrupt:
-        print("\n\nOperation cancelled by user.")
+        print("\n\nOperation cancelled by user.", flush=True)
         sys.exit(130)
     except Exception as e:
-        print(f"\nUnexpected error: {e}")
+        print(f"\nUnexpected error: {e}", flush=True)
         sys.exit(1)
 
 

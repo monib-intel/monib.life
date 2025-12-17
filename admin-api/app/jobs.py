@@ -199,16 +199,56 @@ class JobManager:
             job_id: Job ID
             output: Output line from process
         """
-        # Simple progress detection - can be enhanced
         output_lower = output.lower()
         
-        # Look for completion indicators
-        if "complete" in output_lower or "✓" in output:
+        # Look for specific progress indicators from reading-assistant
+        # Chapter analysis progress (e.g., "Analyzing chapter 3/18")
+        if "analyzing chapter" in output_lower or "processing chapter" in output_lower:
+            import re
+            match = re.search(r'chapter\s+(\d+)[/\s]+(\d+)', output_lower)
+            if match:
+                current = int(match.group(1))
+                total = int(match.group(2))
+                # Map chapter progress to 20-80% range
+                progress = 20.0 + (current / total) * 60.0
+                self.storage.update_job(job_id, progress=progress)
+                return
+        
+        # Stage-based progress
+        if "stage 1" in output_lower or "extraction" in output_lower:
+            self.storage.update_job(job_id, progress=15.0)
+        elif "stage 2" in output_lower or "summary" in output_lower:
+            self.storage.update_job(job_id, progress=30.0)
+        elif "stage 3" in output_lower:
+            self.storage.update_job(job_id, progress=45.0)
+        elif "stage 4" in output_lower:
+            self.storage.update_job(job_id, progress=60.0)
+        elif "stage 5" in output_lower:
+            self.storage.update_job(job_id, progress=70.0)
+        elif "stage 6" in output_lower:
+            self.storage.update_job(job_id, progress=80.0)
+        elif "stage 7" in output_lower:
+            self.storage.update_job(job_id, progress=85.0)
+        elif "stage 8" in output_lower:
             self.storage.update_job(job_id, progress=90.0)
+        
+        # API call status
+        elif "api call" in output_lower or "calling api" in output_lower:
+            job = self.storage.get_job(job_id)
+            if job and job.progress < 40:
+                self.storage.update_job(job_id, progress=min(job.progress + 5, 40.0))
+        
+        # Completion indicators
+        elif "complete" in output_lower and "✓" in output:
+            self.storage.update_job(job_id, progress=95.0)
+        elif "synthesis complete" in output_lower:
+            self.storage.update_job(job_id, progress=95.0)
+        
+        # General progress indicators
         elif "processing" in output_lower or "analyzing" in output_lower:
             job = self.storage.get_job(job_id)
-            if job and job.progress < 50:
-                self.storage.update_job(job_id, progress=50.0)
+            if job and job.progress < 30:
+                self.storage.update_job(job_id, progress=30.0)
         elif "starting" in output_lower or "running" in output_lower:
             job = self.storage.get_job(job_id)
             if job and job.progress < 10:
