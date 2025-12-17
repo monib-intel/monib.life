@@ -156,21 +156,22 @@ class ReadingCLI:
                 sys.path.insert(0, str(self.reading_assistant_path / "src"))
                 from epub_to_obsidian.cli import main as reading_cli
                 
-                # Call directly (this will stream to stdout)
-                sys.argv = [
+                # Build command arguments
+                base_args = [
                     "epub_to_obsidian",
                     epub_file,
-                    "--extract" if api_key_available else "--convert-only",
-                    "--summary",
-                    "--output-dir",
-                    str(output_dir)
-                ] if api_key_available else [
-                    "epub_to_obsidian",
-                    epub_file,
-                    "--convert-only",
                     "--output-dir",
                     str(output_dir)
                 ]
+                
+                # Add mode-specific flags
+                if api_key_available:
+                    mode_args = ["--extract", "--summary"]
+                else:
+                    mode_args = ["--convert-only"]
+                
+                # Set sys.argv for Click CLI
+                sys.argv = base_args[:2] + mode_args + base_args[2:]
                 
                 exit_code = reading_cli()
                 

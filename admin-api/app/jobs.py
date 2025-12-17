@@ -6,6 +6,7 @@ This module handles job creation, execution, monitoring, and cancellation.
 
 import asyncio
 import os
+import re
 import subprocess
 import uuid
 from datetime import datetime, timedelta
@@ -15,6 +16,10 @@ from typing import Dict, List, Optional
 from .logging_config import setup_job_logger, get_job_logger
 from .models import Job, JobStatus, JobType
 from .storage import JobStorage
+
+# Progress tracking constants
+CHAPTER_PROGRESS_START = 20.0  # Progress % when chapter processing starts
+CHAPTER_PROGRESS_RANGE = 60.0  # Progress % range for chapter processing (20-80%)
 
 
 class JobManager:
@@ -204,13 +209,12 @@ class JobManager:
         # Look for specific progress indicators from reading-assistant
         # Chapter analysis progress (e.g., "Analyzing chapter 3/18")
         if "analyzing chapter" in output_lower or "processing chapter" in output_lower:
-            import re
             match = re.search(r'chapter\s+(\d+)[/\s]+(\d+)', output_lower)
             if match:
                 current = int(match.group(1))
                 total = int(match.group(2))
-                # Map chapter progress to 20-80% range
-                progress = 20.0 + (current / total) * 60.0
+                # Map chapter progress to configured range
+                progress = CHAPTER_PROGRESS_START + (current / total) * CHAPTER_PROGRESS_RANGE
                 self.storage.update_job(job_id, progress=progress)
                 return
         
