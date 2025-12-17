@@ -42,6 +42,19 @@ Tests library integration with a single book:
 2. Connect to user's library
 3. Find related books in the collection
 
+### Scenario 4: Batch Processing
+Tests parallel processing of multiple books:
+1. Batch analyze multiple books with configurable workers
+2. Verify parallel execution works correctly
+3. Test graceful error handling (continue on failures)
+4. Test full pipeline with synthesis
+
+### Scenario 5: Batch Pipeline with Synthesis
+Tests complete batch pipeline:
+1. Parallel analysis of multiple books
+2. Syntopical synthesis after analysis
+3. Progress reporting during batch operations
+
 ## Directory Structure
 
 ```

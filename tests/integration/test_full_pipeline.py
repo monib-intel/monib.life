@@ -339,3 +339,171 @@ class TestDataFlow:
         3. Results are properly merged
         """
         pass
+
+
+class TestBatchProcessing:
+    """Tests for batch/parallel processing functionality."""
+
+    @pytest.mark.integration
+    def test_batch_analyze_command_exists(self, unified_cli_path: Path):
+        """Test that batch-analyze command is available."""
+        result = subprocess.run(
+            [sys.executable, str(unified_cli_path), "batch-analyze", "--help"],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, f"batch-analyze help failed: {result.stderr}"
+        assert "workers" in result.stdout.lower()
+        assert "progress" in result.stdout.lower()
+
+    @pytest.mark.integration
+    def test_batch_pipeline_command_exists(self, unified_cli_path: Path):
+        """Test that batch-pipeline command is available."""
+        result = subprocess.run(
+            [sys.executable, str(unified_cli_path), "batch-pipeline", "--help"],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, f"batch-pipeline help failed: {result.stderr}"
+        assert "workers" in result.stdout.lower()
+        assert "synthesize" in result.stdout.lower()
+        assert "progress" in result.stdout.lower()
+
+    @pytest.mark.integration
+    @pytest.mark.requires_services
+    @pytest.mark.skip(
+        reason="Requires reading-bot#56 (Stage 8) to be implemented"
+    )
+    def test_batch_analyze_parallel_processing(
+        self, sample_books_dir: Path, temp_output_dir: Path
+    ):
+        """
+        Test that batch-analyze processes multiple books in parallel.
+
+        Verifies:
+        1. Multiple books are processed
+        2. Parallel processing works correctly
+        3. Results are collected for all books
+        4. Failed books don't stop the batch
+        """
+        book1 = sample_books_dir / "book1_design.epub"
+        book2 = sample_books_dir / "book2_design.epub"
+        book3 = sample_books_dir / "book3_design.epub"
+
+        if not all([book1.exists(), book2.exists(), book3.exists()]):
+            pytest.skip("Sample EPUB files not yet created in fixtures")
+
+        # Run batch analysis
+        result = self._run_unified_cli(
+            ["batch-analyze", str(book1), str(book2), str(book3), "--workers", "2", "--progress"]
+        )
+
+        # Should complete successfully
+        assert result.returncode == 0, f"Batch analysis failed: {result.stderr}"
+
+        # Check output for progress indicators
+        output = result.stdout.lower()
+        assert "batch" in output
+        assert "complete" in output or "success" in output
+
+    @pytest.mark.integration
+    @pytest.mark.requires_services
+    @pytest.mark.skip(
+        reason="Requires reading-bot#56 (Stage 8) and syntopical#86 (Bridge Adapter) "
+        "to be implemented"
+    )
+    def test_batch_pipeline_with_synthesis(
+        self, sample_books_dir: Path, temp_output_dir: Path
+    ):
+        """
+        Test that batch-pipeline processes books and runs synthesis.
+
+        Verifies:
+        1. Books are analyzed in parallel
+        2. Synthesis runs after analysis (if --synthesize flag is used)
+        3. Final comparison output is generated
+        """
+        book1 = sample_books_dir / "book1_design.epub"
+        book2 = sample_books_dir / "book2_design.epub"
+
+        if not all([book1.exists(), book2.exists()]):
+            pytest.skip("Sample EPUB files not yet created in fixtures")
+
+        # Run batch pipeline with synthesis
+        result = self._run_unified_cli(
+            [
+                "batch-pipeline",
+                str(book1),
+                str(book2),
+                "--workers",
+                "2",
+                "--synthesize",
+                "--progress",
+            ]
+        )
+
+        assert result.returncode == 0, f"Batch pipeline failed: {result.stderr}"
+
+        # Check for synthesis steps in output
+        output = result.stdout.lower()
+        assert "synthesis" in output or "comparison" in output
+
+    @pytest.mark.integration
+    @pytest.mark.requires_services
+    @pytest.mark.skip(
+        reason="Requires reading-bot#56 (Stage 8) to be implemented"
+    )
+    def test_batch_graceful_error_handling(
+        self, sample_books_dir: Path, temp_output_dir: Path
+    ):
+        """
+        Test that batch processing continues when individual books fail.
+
+        Verifies:
+        1. Failed books are reported
+        2. Processing continues with remaining books
+        3. Summary shows successful vs failed counts
+        """
+        book1 = sample_books_dir / "book1_design.epub"
+        book2 = "nonexistent_book.epub"  # This should fail
+        book3 = sample_books_dir / "book3_design.epub"
+
+        if not book1.exists() or not book3.exists():
+            pytest.skip("Sample EPUB files not yet created in fixtures")
+
+        # Run batch analysis with one invalid file
+        result = self._run_unified_cli(
+            ["batch-analyze", str(book1), book2, str(book3), "--workers", "2", "--progress"]
+        )
+
+        # Check output for error handling
+        output = result.stdout + result.stderr
+        assert "failed" in output.lower() or "error" in output.lower()
+
+    @pytest.mark.integration
+    def test_batch_worker_count_validation(self, unified_cli_path: Path):
+        """Test that worker count parameter is properly validated."""
+        # Valid worker count
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(unified_cli_path),
+                "batch-analyze",
+                "test.epub",
+                "--workers",
+                "3",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        # Will fail due to missing service, but should accept the worker count
+        # (error should be about service, not about worker count)
+        assert "workers" not in result.stderr.lower() and "worker" not in result.stderr.lower()
+
+    # Helper methods
+
+    def _run_unified_cli(self, args: List[str]) -> subprocess.CompletedProcess:
+        """Run the unified CLI with the given arguments."""
+        cli_path = Path(__file__).parent.parent.parent / "cli" / "unified.py"
+        cmd = [sys.executable, str(cli_path)] + args
+        return subprocess.run(cmd, capture_output=True, text=True)

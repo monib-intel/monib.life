@@ -103,6 +103,8 @@ python cli/unified.py find-gaps comparison.md
 | `compare` | Syntopical comparison (stages 1-3) | Multiple analysis markdown files | Comparison markdown |
 | `library-connect` | Connect to library (stage 4) | Comparison markdown | Updated comparison |
 | `find-gaps` | Find knowledge gaps (stage 5) | Comparison markdown | Gap analysis |
+| `batch-analyze` | Batch analyze multiple books in parallel | Multiple EPUB files | Multiple analysis markdown files |
+| `batch-pipeline` | Full pipeline with parallel processing | Multiple EPUB files | Analysis files (+ comparison if --synthesize) |
 
 ## Examples
 
@@ -141,6 +143,30 @@ If you already have analyses and want to re-compare:
 ```bash
 # Just run the comparison again
 python cli/unified.py compare *.md
+```
+
+### Example 4: Batch Processing Multiple Books
+
+Process multiple books in parallel with 3 workers:
+
+```bash
+# Batch analyze with progress tracking
+python cli/unified.py batch-analyze book1.epub book2.epub book3.epub --workers 3 --progress
+
+# Process all EPUB files in a directory
+python cli/unified.py batch-analyze books/*.epub --workers 5 --progress
+```
+
+### Example 5: Full Pipeline with Batch Processing
+
+Run complete pipeline with parallel processing and synthesis:
+
+```bash
+# Analyze + synthesize all books
+python cli/unified.py batch-pipeline *.epub --workers 5 --synthesize --progress
+
+# Just batch analyze (no synthesis)
+python cli/unified.py batch-pipeline books/*.epub --workers 3 --progress
 ```
 
 ## Prerequisites
@@ -218,6 +244,78 @@ The Unified CLI acts as an orchestrator:
 4. Library connection
 5. Gap analysis
 
+## Batch/Parallel Processing
+
+The CLI supports batch processing of multiple books with configurable concurrency:
+
+### Features
+
+- **Parallel Processing**: Process multiple books simultaneously using ThreadPoolExecutor
+- **Configurable Workers**: Control concurrency with `--workers` flag (default: 3 for batch-analyze, 5 for batch-pipeline)
+- **Progress Reporting**: Track progress with `--progress` flag
+- **Graceful Error Handling**: Continue processing remaining books if one fails
+- **Resource Management**: Control parallel execution to manage API rate limits and memory
+
+### Batch Commands
+
+#### `batch-analyze`
+
+Analyze multiple books in parallel without synthesis:
+
+```bash
+# Basic usage - analyze 3 books with default workers (3)
+python cli/unified.py batch-analyze book1.epub book2.epub book3.epub
+
+# Custom worker count
+python cli/unified.py batch-analyze *.epub --workers 5
+
+# With progress tracking
+python cli/unified.py batch-analyze books/*.epub --workers 3 --progress
+```
+
+**Output**: Individual analysis markdown files for each successfully processed book.
+
+#### `batch-pipeline`
+
+Full pipeline with parallel processing and optional synthesis:
+
+```bash
+# Analyze only (no synthesis)
+python cli/unified.py batch-pipeline *.epub --workers 5 --progress
+
+# Full pipeline: analyze + synthesize
+python cli/unified.py batch-pipeline book1.epub book2.epub book3.epub --workers 5 --synthesize --progress
+```
+
+**Output**: 
+- Analysis files for each book
+- If `--synthesize` is used: comparison output, library connections, and gap analysis
+
+### Performance Considerations
+
+- **Worker Count**: Higher worker counts increase parallelism but consume more resources
+  - Recommended: 3-5 workers for most use cases
+  - Adjust based on available CPU/memory and API rate limits
+- **API Rate Limits**: The underlying services may have API rate limits; use fewer workers if hitting limits
+- **Memory Usage**: Each worker processes one book at a time; monitor memory with large EPUBs
+- **I/O vs CPU**: The CLI uses ThreadPoolExecutor (suitable for I/O-bound tasks like API calls)
+
+### Error Handling in Batch Mode
+
+The CLI handles failures gracefully:
+
+1. **Individual Failures**: If one book fails, others continue processing
+2. **Summary Report**: Shows successful vs failed books at completion
+3. **Exit Code**: Returns success (0) if at least one book was processed successfully
+4. **Partial Results**: Synthesis steps proceed with successfully analyzed books
+
+Example output:
+```
+📊 Batch analysis complete:
+   ✓ Successful: 8/10
+   ✗ Failed: 2/10
+```
+
 ## Error Handling
 
 The CLI provides clear error messages for common issues:
@@ -226,6 +324,7 @@ The CLI provides clear error messages for common issues:
 - **File not found**: Validates input files exist before processing
 - **Service failures**: Reports which stage failed and continues where possible
 - **Missing dependencies**: Points to relevant README files
+- **Batch failures**: Reports individual book failures while continuing with others
 
 ## Integration with Makefile
 
@@ -317,16 +416,18 @@ chmod +x cli/unified.py
 
 ## Future Enhancements
 
-- [ ] Progress bars for long-running operations
-- [ ] Parallel processing of multiple books
+- [ ] Progress bars for long-running operations (using tqdm or similar)
+- [x] Parallel processing of multiple books (implemented via batch-analyze and batch-pipeline)
+- [x] Batch processing from directory (implemented via batch commands with glob patterns)
 - [ ] Configuration file support (.reading-cli.yaml)
 - [ ] Output format options (JSON, HTML, PDF)
 - [ ] Interactive mode for selecting books
 - [ ] Integration with vault for automatic storage
-- [ ] Batch processing from directory
 - [ ] Resume interrupted operations
 - [ ] Logging and verbose modes
 - [ ] Plugin system for custom stages
+- [ ] Caching to avoid re-processing books
+- [ ] API rate limit coordination across services
 
 ## Contributing
 
