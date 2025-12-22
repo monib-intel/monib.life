@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-from converters import EPUBConverter, PDFConverter, MOBIConverter
+from converters import EPUBConverter, PDFConverter, MOBIConverter, MarkdownToPDFConverter
 
 
 def get_converter(file_path: Path):
@@ -20,7 +20,7 @@ def get_converter(file_path: Path):
     Returns:
         Converter instance or None if format not supported
     """
-    converters = [EPUBConverter(), PDFConverter(), MOBIConverter()]
+    converters = [EPUBConverter(), PDFConverter(), MOBIConverter(), MarkdownToPDFConverter()]
     
     for converter in converters:
         if converter.supports_format(file_path):
@@ -116,15 +116,18 @@ def convert_files(
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Convert ebook files (EPUB, PDF, MOBI) to Markdown",
+        description="Convert ebook files (EPUB, PDF, MOBI) to Markdown or Markdown to PDF",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Convert single file
+  # Convert ebook to Markdown
   %(prog)s book.epub --output-dir ./markdown
 
+  # Convert Markdown to PDF
+  %(prog)s document.md --output-dir ./pdf
+
   # Convert multiple files
-  %(prog)s book1.epub book2.pdf book3.mobi --output-dir ./markdown
+  %(prog)s book1.epub book2.pdf book3.mobi document.md --output-dir ./output
 
   # Batch conversion with parallel processing
   %(prog)s books/*.epub --parallel --workers 4 --output-dir ./markdown
@@ -138,7 +141,7 @@ Examples:
         'files',
         nargs='+',
         type=Path,
-        help='Input files to convert (supports EPUB, PDF, MOBI)',
+        help='Input files to convert (supports EPUB, PDF, MOBI, Markdown)',
     )
     
     parser.add_argument(

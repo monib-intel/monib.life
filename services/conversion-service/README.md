@@ -1,6 +1,6 @@
 # Conversion Service
 
-Standalone service for converting ebook formats (EPUB, PDF, MOBI) to Markdown.
+Standalone service for converting ebook formats (EPUB, PDF, MOBI) to Markdown and Markdown to PDF.
 
 ## Quick Start
 
@@ -9,8 +9,11 @@ Standalone service for converting ebook formats (EPUB, PDF, MOBI) to Markdown.
 cd services/conversion-service
 pip install -e .
 
-# Convert a single book
+# Convert an ebook to Markdown
 python src/cli.py book.epub --output-dir ./output
+
+# Convert Markdown to PDF
+python src/cli.py document.md --output-dir ./output
 
 # Convert multiple books in parallel
 python src/cli.py books/*.epub --parallel --workers 4 --output-dir ./output
@@ -22,7 +25,7 @@ make convert FILE=path/to/book.epub OUTPUT=./output
 
 ## Overview
 
-The conversion-service provides a clean, reusable interface for converting various ebook formats to Markdown. It has been extracted from the reading-assistant to enable:
+The conversion-service provides a clean, reusable interface for converting various ebook formats to Markdown and Markdown to PDF. It has been extracted from the reading-assistant to enable:
 
 - **Reusability**: Use conversion functionality across multiple services
 - **Separation of Concerns**: Keep conversion logic separate from AI analysis
@@ -32,8 +35,10 @@ The conversion-service provides a clean, reusable interface for converting vario
 
 ## Features
 
-- **Multiple Format Support**: EPUB, PDF, MOBI, AZW, AZW3
+- **Multiple Format Support**: EPUB, PDF, MOBI, AZW, AZW3, Markdown
+- **Bidirectional Conversion**: Ebooks to Markdown, Markdown to PDF
 - **Markdown Output**: Clean, structured Markdown with frontmatter
+- **PDF Generation**: Styled, professional PDFs from Markdown
 - **Batch Processing**: Convert multiple files at once
 - **Parallel Processing**: Speed up batch conversions with parallel workers
 - **Image Extraction**: Optionally extract and save images
@@ -76,13 +81,17 @@ brew install calibre
 #### Convert a Single File
 
 ```bash
+# Ebook to Markdown
 convert book.epub --output-dir ./markdown
+
+# Markdown to PDF
+convert document.md --output-dir ./pdf
 ```
 
 #### Convert Multiple Files
 
 ```bash
-convert book1.epub book2.pdf book3.mobi --output-dir ./markdown
+convert book1.epub book2.pdf book3.mobi document.md --output-dir ./output
 ```
 
 #### Batch Conversion with Parallel Processing
@@ -107,9 +116,9 @@ convert --help
 
 ```python
 from pathlib import Path
-from converters import EPUBConverter, PDFConverter, MOBIConverter
+from converters import EPUBConverter, PDFConverter, MOBIConverter, MarkdownToPDFConverter
 
-# Convert EPUB
+# Convert EPUB to Markdown
 epub_converter = EPUBConverter()
 output_path = epub_converter.convert(
     input_path=Path("book.epub"),
@@ -119,7 +128,7 @@ output_path = epub_converter.convert(
 )
 print(f"Converted to: {output_path}")
 
-# Convert PDF
+# Convert PDF to Markdown
 pdf_converter = PDFConverter()
 output_path = pdf_converter.convert(
     input_path=Path("document.pdf"),
@@ -127,23 +136,36 @@ output_path = pdf_converter.convert(
     clean_headers=True
 )
 
-# Convert MOBI (requires Calibre)
+# Convert MOBI to Markdown (requires Calibre)
 mobi_converter = MOBIConverter()
 output_path = mobi_converter.convert(
     input_path=Path("book.mobi"),
     output_dir=Path("./output")
 )
+
+# Convert Markdown to PDF
+md_to_pdf_converter = MarkdownToPDFConverter()
+output_path = md_to_pdf_converter.convert(
+    input_path=Path("document.md"),
+    output_dir=Path("./output")
+)
+print(f"Generated PDF: {output_path}")
 ```
 
 ### Auto-detect Format
 
 ```python
 from pathlib import Path
-from converters import EPUBConverter, PDFConverter, MOBIConverter
+from converters import EPUBConverter, PDFConverter, MOBIConverter, MarkdownToPDFConverter
 
 def convert_file(file_path: Path, output_dir: Path):
     """Convert any supported format."""
-    converters = [EPUBConverter(), PDFConverter(), MOBIConverter()]
+    converters = [
+        EPUBConverter(), 
+        PDFConverter(), 
+        MOBIConverter(),
+        MarkdownToPDFConverter()
+    ]
     
     for converter in converters:
         if converter.supports_format(file_path):
@@ -177,13 +199,14 @@ Content here...
 conversion-service/
 ├── src/
 │   ├── __init__.py
-│   ├── cli.py              # Command-line interface
+│   ├── cli.py                        # Command-line interface
 │   └── converters/
 │       ├── __init__.py
-│       ├── base_converter.py    # Base class for all converters
-│       ├── epub_converter.py    # EPUB → Markdown
-│       ├── pdf_converter.py     # PDF → Markdown
-│       └── mobi_converter.py    # MOBI → Markdown (via EPUB)
+│       ├── base_converter.py         # Base class for all converters
+│       ├── epub_converter.py         # EPUB → Markdown
+│       ├── pdf_converter.py          # PDF → Markdown
+│       ├── mobi_converter.py         # MOBI → Markdown (via EPUB)
+│       └── markdown_to_pdf_converter.py  # Markdown → PDF
 ├── pyproject.toml          # Python package configuration
 ├── flake.nix              # Nix development environment
 └── README.md              # This file
@@ -211,6 +234,15 @@ Uses Calibre's `ebook-convert` to convert MOBI to EPUB first, then uses the EPUB
 - MOBI format
 - AZW format
 - AZW3 format
+
+### Markdown to PDF Converter
+
+Uses `WeasyPrint` to generate professional PDFs from Markdown:
+- Converts Markdown to HTML using `python-markdown`
+- Applies professional styling (fonts, spacing, page layout)
+- Supports code blocks, tables, images, and more
+- Generates A4-sized PDFs with proper margins
+- Handles page breaks appropriately
 
 ## Integration with Other Services
 
@@ -336,6 +368,8 @@ ruff check src/
 - html2text >= 2020.1.16
 - pdfplumber >= 0.10.0
 - lxml >= 4.9.0
+- markdown >= 3.4.0 (for Markdown to PDF conversion)
+- weasyprint >= 59.0 (for Markdown to PDF conversion)
 
 ### Optional
 
