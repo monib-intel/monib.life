@@ -4,7 +4,7 @@
 #   - vault/   - Obsidian vault (content source)
 #   - website/ - Quartz website (build system)
 
-.PHONY: all install dev build test clean deploy sync help admin-server admin-dev admin-ui admin-full add-book process-books stop convert convert-help
+.PHONY: all install dev build test clean deploy sync help admin-server admin-dev admin-ui admin-full add-book process-books stop convert convert-help summarize-to-epub-pdf
 
 # Website directory (submodule)
 WEBSITE_DIR := website
@@ -154,6 +154,27 @@ convert:
 convert-help:
 	@cd $(CONVERSION_SERVICE_DIR) && python src/cli.py --help
 
+# Summarize book to Markdown and convert to PDF
+summarize-to-epub-pdf:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Error: FILE variable not set"; \
+		echo "Usage: make summarize-to-epub-pdf FILE=path/to/book.epub"; \
+		exit 1; \
+	fi
+	@echo "Summarizing $(FILE)..."
+	@mkdir -p private/book-summaries-md vault/book-summaries-pdf
+	@cd services/reading-assistant && uv run python scripts/process_epub.py "$(FILE)" --extract --summary -o ../../private/book-summaries-md
+	@echo "Converting summary to PDF..."
+	@SUMMARY_FILE=$$(find private/book-summaries-md -name "*_AnalyticalReading.md" -type f | head -1); \
+	if [ -z "$$SUMMARY_FILE" ]; then \
+		echo "Error: Could not find summary file"; \
+		exit 1; \
+	fi; \
+	cd services/conversion-service && ./convert.sh "../../$$SUMMARY_FILE" --output-dir ../../vault/book-summaries-pdf
+	@echo "✅ Summary and PDF complete!"
+	@echo "   Markdown: private/book-summaries-md/"
+	@echo "   PDF: vault/book-summaries-pdf/"
+
 # Show help
 help:
 	@echo "monib.life - Build and development commands"
@@ -182,16 +203,19 @@ help:
 	@echo "  process-books Process all books in queue"
 	@echo ""
 	@echo "Conversion Service Targets:"
-	@echo "  convert      Convert ebook to Markdown (FILE=path/to/book.epub [OUTPUT=./output])"
-	@echo "  convert-help Show conversion service help"
+	@echo "  convert              Convert ebook to Markdown (FILE=path/to/book.epub [OUTPUT=./output])"
+	@echo "  convert-help         Show conversion service help"
+	@echo "  summarize-to-epub-pdf Summarize book to Markdown, then convert to PDF"
+	@echo "                        (FILE=path/to/book.epub)"
 	@echo ""
-	@echo "  help         Show this help message"
+	@echo "  help                 Show this help message"
 	@echo ""
 	@echo "Examples:"
-	@echo "  make install                       # Install all dependencies"
-	@echo "  make dev                           # Start local development server"
-	@echo "  make admin-full                    # Start admin dashboard (API + UI)"
-	@echo "  make admin-dev                     # Start everything (admin + Quartz)"
-	@echo "  make add-book FILE=book.epub       # Add book to queue"
-	@echo "  make convert FILE=book.epub        # Convert book to Markdown"
-	@echo "  make stop                          # Stop all services"
+	@echo "  make install                               # Install all dependencies"
+	@echo "  make dev                                   # Start local development server"
+	@echo "  make admin-full                            # Start admin dashboard (API + UI)"
+	@echo "  make admin-dev                             # Start everything (admin + Quartz)"
+	@echo "  make add-book FILE=book.epub               # Add book to queue"
+	@echo "  make convert FILE=book.epub                # Convert book to Markdown"
+	@echo "  make summarize-to-epub-pdf FILE=book.epub # Summarize book to Markdown & PDF"
+	@echo "  make stop                                  # Stop all services"

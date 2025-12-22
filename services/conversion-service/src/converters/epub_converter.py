@@ -20,6 +20,53 @@ class EPUBConverter(BaseConverter):
         self.h2t.ignore_images = False
         self.h2t.body_width = 0  # Don't wrap lines
 
+    def _add_list_line_breaks(self, markdown: str) -> str:
+        """
+        Add line breaks between list items and before lists for better readability.
+
+        Args:
+            markdown: The markdown content
+
+        Returns:
+            Markdown with added line breaks between list items and before lists
+        """
+        lines = markdown.split('\n')
+        result = []
+        in_list = False
+
+        for i, line in enumerate(lines):
+            stripped = line.lstrip()
+            is_list_item = stripped.startswith('* ') or stripped.startswith('- ') or (
+                stripped and stripped[0].isdigit() and '. ' in stripped[:4]
+            )
+
+            # Check if previous line exists and is not empty or a list item
+            prev_line_exists = i > 0
+            prev_line = lines[i - 1] if prev_line_exists else ''
+            prev_stripped = prev_line.lstrip()
+            prev_is_list = prev_stripped.startswith('* ') or prev_stripped.startswith('- ') or (
+                prev_stripped and prev_stripped[0].isdigit() and '. ' in prev_stripped[:4]
+            )
+
+            if is_list_item:
+                # Add blank line before list starts (if previous line is not empty and not a list item)
+                if prev_line_exists and prev_line.strip() != '' and not prev_is_list:
+                    result.append('')
+
+                result.append(line)
+                # Add blank line after list item if next line is also a list item
+                if i + 1 < len(lines):
+                    next_stripped = lines[i + 1].lstrip()
+                    next_is_list = next_stripped.startswith('* ') or next_stripped.startswith('- ') or (
+                        next_stripped and next_stripped[0].isdigit() and '. ' in next_stripped[:4]
+                    )
+                    if next_is_list and result and result[-1] != '':
+                        result.append('')
+            else:
+                result.append(line)
+
+        return '\n'.join(result)
+
     def supports_format(self, file_path: Path) -> bool:
         """
         Check if this converter supports the given file format.
@@ -88,6 +135,8 @@ class EPUBConverter(BaseConverter):
                 # Convert to markdown
                 html_content = str(soup)
                 markdown_content = self.h2t.handle(html_content)
+                # Add line breaks between list items
+                markdown_content = self._add_list_line_breaks(markdown_content)
                 markdown_parts.append(markdown_content)
                 markdown_parts.append("")
             
