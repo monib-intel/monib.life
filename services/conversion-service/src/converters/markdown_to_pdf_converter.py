@@ -17,7 +17,7 @@ class MarkdownToPDFConverter(BaseConverter):
             extensions=[
                 'extra',  # Tables, fenced code blocks, etc.
                 'codehilite',  # Code syntax highlighting
-                'toc',  # Table of contents
+                'toc',  # Generates [TOC] placeholder for table of contents
                 'meta',  # Metadata support
             ]
         )
@@ -47,20 +47,33 @@ class MarkdownToPDFConverter(BaseConverter):
         Args:
             input_path: Path to the Markdown file
             output_dir: Directory to save the converted PDF file
-            extract_images: Not used for Markdown to PDF conversion
-            clean_headers: Not used for Markdown to PDF conversion
+            extract_images: Not applicable for Markdown to PDF conversion (ignored)
+            clean_headers: Not applicable for Markdown to PDF conversion (ignored)
 
         Returns:
             Path to the generated PDF file
+            
+        Raises:
+            FileNotFoundError: If the input file doesn't exist
+            ValueError: If the Markdown content is invalid
+            Exception: If PDF generation fails
         """
         self._ensure_output_dir(output_dir)
         
         # Read the Markdown file
-        with open(input_path, 'r', encoding='utf-8') as f:
-            markdown_content = f.read()
+        try:
+            with open(input_path, 'r', encoding='utf-8') as f:
+                markdown_content = f.read()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Input file not found: {input_path}")
+        except Exception as e:
+            raise Exception(f"Error reading file {input_path}: {e}")
         
         # Convert Markdown to HTML
-        html_content = self.md.convert(markdown_content)
+        try:
+            html_content = self.md.convert(markdown_content)
+        except Exception as e:
+            raise ValueError(f"Error converting Markdown to HTML: {e}")
         
         # Create a styled HTML document
         styled_html = self._create_styled_html(html_content)
@@ -69,9 +82,12 @@ class MarkdownToPDFConverter(BaseConverter):
         output_path = output_dir / f"{input_path.stem}.pdf"
         
         # Convert HTML to PDF using WeasyPrint
-        HTML(string=styled_html, base_url=str(input_path.parent)).write_pdf(
-            output_path
-        )
+        try:
+            HTML(string=styled_html, base_url=str(input_path.parent)).write_pdf(
+                output_path
+            )
+        except Exception as e:
+            raise Exception(f"Error generating PDF: {e}")
         
         return output_path
 
