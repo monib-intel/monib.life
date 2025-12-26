@@ -1,0 +1,122 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import ContentLayout from '../layouts/ContentLayout.astro';
+import Breadcrumbs from '../components/header/Breadcrumbs.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('content', ({ data }) => {
+    // Only include published content (exclude drafts)
+    return data.status === 'published' && data.draft !== true;
+  });
+
+  return entries
+    .filter((entry) => entry.id !== 'index.md') // Exclude root index, it has its own route
+    .map((entry) => {
+      let slug = entry.id.replace(/\.md$/, '');
+
+      // If the file is named index.md inside a directory, use the directory name as slug
+      // e.g., Resume/index.md -> slug: Resume
+      if (slug.endsWith('/index')) {
+        slug = slug.replace(/\/index$/, '');
+      }
+
+      // Normalize first segment to lowercase to match index pages
+      // e.g., Resume/Monib_Ahmed_Resume -> resume/Monib_Ahmed_Resume
+      // e.g., Articles/foo -> articles/foo
+      // e.g., Projects/bar -> projects/bar
+      const parts = slug.split('/');
+      if (parts.length > 0) {
+        const firstPart = parts[0];
+        if (firstPart === 'Resume' || firstPart === 'Articles' || firstPart === 'Projects') {
+          parts[0] = firstPart.toLowerCase();
+          slug = parts.join('/');
+        }
+      }
+
+      return {
+        params: { slug },
+        props: { entry },
+      };
+    });
+}
+
+interface Props {
+  entry: CollectionEntry<'content'>;
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await entry.render();
+const { title, description } = entry.data;
+
+// Build breadcrumbs from slug
+const slugParts = entry.id.replace(/\.md$/, '').split('/');
+const breadcrumbs = slugParts.map((part, index) => {
+  // Normalize slug parts to lowercase for URLs
+  const normalizedParts = slugParts.map((p, i) => {
+    if (i === 0 && (p === 'Articles' || p === 'Projects' || p === 'Resume')) {
+      return p.toLowerCase();
+    }
+    return p;
+  });
+  const href = '/' + normalizedParts.slice(0, index + 1).join('/');
+
+  // Create human-readable label: replace hyphens and underscores with spaces
+  const label = part
+    .replace(/[-_]/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+  return { label, href };
+});
+breadcrumbs.unshift({ label: 'Home', href: '/' });
+---
+
+<ContentLayout
+  title={title}
+  description={description}
+  frontmatter={entry.data}
+  headings={headings}
+>
+  <Breadcrumbs items={breadcrumbs} />
+
+  <article class="prose-custom">
+    <!-- Metadata for special content types -->
+    {entry.data.type === 'book-summary' && entry.data.author && (
+      <div class="not-prose mb-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <dl class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <dt class="font-semibold text-gray-700 dark:text-gray-300">Author</dt>
+            <dd class="text-gray-600 dark:text-gray-400">{entry.data.author}</dd>
+          </div>
+          {entry.data.reading_level && (
+            <div>
+              <dt class="font-semibold text-gray-700 dark:text-gray-300">Reading Level</dt>
+              <dd class="text-gray-600 dark:text-gray-400">{entry.data.reading_level}</dd>
+            </div>
+          )}
+          {entry.data.generated && (
+            <div class="col-span-2">
+              <dt class="font-semibold text-gray-700 dark:text-gray-300">Generated</dt>
+              <dd class="text-gray-600 dark:text-gray-400 text-xs">{entry.data.generated}</dd>
+            </div>
+          )}
+        </dl>
+      </div>
+    )}
+
+    <Content />
+
+    <!-- Metadata footer -->
+    {(entry.data.created || entry.data.updated) && (
+      <div class="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400">
+        {entry.data.created && (
+          <p>Created: {new Date(entry.data.created).toLocaleDateString()}</p>
+        )}
+        {entry.data.updated && (
+          <p>Updated: {new Date(entry.data.updated).toLocaleDateString()}</p>
+        )}
+      </div>
+    )}
+  </article>
+</ContentLayout>

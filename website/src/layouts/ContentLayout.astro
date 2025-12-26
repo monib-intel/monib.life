@@ -1,0 +1,46 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/header/Header.astro';
+import LeftSidebar from '../components/sidebar/LeftSidebar.astro';
+import RightSidebar from '../components/sidebar/RightSidebar.astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  frontmatter?: Record<string, any>;
+  headings?: Array<{ depth: number; text: string; slug: string }>;
+}
+
+const { title, description, ogImage, frontmatter, headings } = Astro.props;
+const currentPath = Astro.url.pathname;
+---
+
+<BaseLayout title={title} description={description} ogImage={ogImage}>
+  <div class="min-h-screen flex flex-col">
+    <Header />
+
+    <div class="flex-1 flex">
+      <!-- Left Sidebar -->
+      <aside class="hidden lg:block w-64 xl:w-72 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 overflow-y-auto sticky top-0 h-screen">
+        <LeftSidebar currentPath={currentPath} />
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-4xl mx-auto">
+          <slot />
+        </div>
+      </main>
+
+      <!-- Right Sidebar -->
+      <aside class="hidden xl:block w-64 flex-shrink-0 border-l border-gray-200 dark:border-gray-800 overflow-y-auto sticky top-0 h-screen">
+        <RightSidebar
+          headings={headings}
+          currentPath={currentPath}
+          frontmatter={frontmatter}
+        />
+      </aside>
+    </div>
+  </div>
+</BaseLayout>

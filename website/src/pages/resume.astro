@@ -1,0 +1,150 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import ContentLayout from '../layouts/ContentLayout.astro';
+import Breadcrumbs from '../components/header/Breadcrumbs.astro';
+
+type ResumeEntry = CollectionEntry<'content'> & {
+  data: {
+    type: 'resume';
+    title: string;
+    description?: string;
+    tags: string[];
+    position?: string;
+    company?: string;
+    location?: string;
+    email?: string;
+    phone?: string;
+    linkedin?: string;
+    github?: string;
+    status: 'draft' | 'published';
+    draft: boolean;
+  };
+};
+
+// Get all resume entries that are published (not draft)
+const allResumes = await getCollection('content', ({ data, id }) => {
+  return (
+    data.type === 'resume' &&
+    data.status === 'published' &&
+    data.draft !== true &&
+    id.startsWith('Resume/')
+  );
+}) as ResumeEntry[];
+
+// Sort by updated date (most recent first)
+const resumes = allResumes.sort((a, b) => {
+  const dateA = a.data.updated ? new Date(a.data.updated).getTime() : 0;
+  const dateB = b.data.updated ? new Date(b.data.updated).getTime() : 0;
+  return dateB - dateA;
+});
+
+const title = 'Resume';
+const description = 'Professional experience, skills, and career trajectory';
+---
+
+<ContentLayout
+  title={title}
+  description={description}
+  frontmatter={{ title, description, type: 'page' }}
+  headings={[]}
+>
+  <Breadcrumbs items={[
+    { label: 'Home', href: '/' },
+    { label: 'Resume', href: '/resume' }
+  ]} />
+
+  <article class="prose-custom">
+    <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">{title}</h1>
+    <p class="text-xl text-gray-600 dark:text-gray-400 mb-8">{description}</p>
+
+    <!-- Resume List -->
+    {resumes.length > 0 ? (
+      <section>
+        <div class="space-y-6">
+          {resumes.map((resume: ResumeEntry) => {
+            let slug = resume.id.replace(/\.md$/, '').replace(/\/index$/, '');
+            // Normalize to lowercase
+            const parts = slug.split('/');
+            if (parts[0] === 'Resume') parts[0] = 'resume';
+            slug = parts.join('/');
+            return (
+              <article class="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
+                <a
+                  href={`/${slug}`}
+                  class="block group no-underline"
+                >
+                  <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {resume.data.title}
+                  </h2>
+
+                  {resume.data.description && (
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                      {resume.data.description}
+                    </p>
+                  )}
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
+                    {resume.data.position && (
+                      <div>
+                        <span class="font-semibold">Position:</span> {resume.data.position}
+                      </div>
+                    )}
+                    {resume.data.company && (
+                      <div>
+                        <span class="font-semibold">Company:</span> {resume.data.company}
+                      </div>
+                    )}
+                    {resume.data.location && (
+                      <div>
+                        <span class="font-semibold">Location:</span> {resume.data.location}
+                      </div>
+                    )}
+                    {resume.data.email && (
+                      <div>
+                        <span class="font-semibold">Email:</span>{' '}
+                        <a href={`mailto:${resume.data.email}`} class="text-blue-600 dark:text-blue-400 hover:underline">
+                          {resume.data.email}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {(resume.data.linkedin || resume.data.github) && (
+                    <div class="flex gap-4 mt-4">
+                      {resume.data.linkedin && (
+                        <a
+                          href={resume.data.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          LinkedIn →
+                        </a>
+                      )}
+                      {resume.data.github && (
+                        <a
+                          href={resume.data.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          GitHub →
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  <p class="text-blue-600 dark:text-blue-400 text-sm mt-4 group-hover:underline">
+                    View full resume →
+                  </p>
+                </a>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    ) : (
+      <p class="text-gray-600 dark:text-gray-400">No resume available yet.</p>
+    )}
+  </article>
+</ContentLayout>

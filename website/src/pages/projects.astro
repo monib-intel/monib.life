@@ -1,0 +1,192 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import ContentLayout from '../layouts/ContentLayout.astro';
+import Breadcrumbs from '../components/header/Breadcrumbs.astro';
+
+type ProjectEntry = CollectionEntry<'content'> & {
+  data: {
+    type: 'project';
+    title: string;
+    description?: string;
+    tags: string[];
+    technologies?: string[];
+    github_url?: string;
+    demo_url?: string;
+    start_date?: Date;
+    end_date?: Date;
+    featured?: boolean;
+    status: 'draft' | 'published';
+    draft: boolean;
+  };
+};
+
+// Get all project entries that are published (not draft)
+const allProjects = await getCollection('content', ({ data, id }) => {
+  return (
+    data.type === 'project' &&
+    data.status === 'published' &&
+    data.draft !== true &&
+    id.startsWith('Projects/')
+  );
+}) as ProjectEntry[];
+
+// Sort by featured first, then by start_date (newest first)
+const projects = allProjects.sort((a, b) => {
+  if (a.data.featured && !b.data.featured) return -1;
+  if (!a.data.featured && b.data.featured) return 1;
+
+  const dateA = a.data.start_date ? new Date(a.data.start_date) : new Date(0);
+  const dateB = b.data.start_date ? new Date(b.data.start_date) : new Date(0);
+  return dateB.getTime() - dateA.getTime();
+});
+
+// Get unique technologies from all projects
+const allTechnologies = new Set<string>();
+projects.forEach(project => {
+  project.data.technologies?.forEach((tech: string) => allTechnologies.add(tech));
+});
+
+const title = 'Projects';
+const description = 'A collection of personal and professional projects showcasing web development, mobile apps, and more';
+---
+
+<ContentLayout
+  title={title}
+  description={description}
+  frontmatter={{ title, description, type: 'page' }}
+  headings={[]}
+>
+  <Breadcrumbs items={[
+    { label: 'Home', href: '/' },
+    { label: 'Projects', href: '/projects' }
+  ]} />
+
+  <article class="prose-custom">
+    <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">{title}</h1>
+    <p class="text-xl text-gray-600 dark:text-gray-400 mb-8">{description}</p>
+
+    <!-- Featured Projects -->
+    {projects.filter(p => p.data.featured).length > 0 && (
+      <section class="mb-12">
+        <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Featured Projects</h2>
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {projects.filter(p => p.data.featured).map((project: ProjectEntry) => {
+            let slug = project.id.replace(/\.md$/, '').replace(/\/index$/, '');
+            // Normalize to lowercase
+            const parts = slug.split('/');
+            if (parts[0] === 'Projects') parts[0] = 'projects';
+            slug = parts.join('/');
+            return (
+              <a
+                href={`/${slug}`}
+                class="block p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors no-underline"
+              >
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  {project.data.title}
+                </h3>
+                {project.data.description && (
+                  <p class="text-gray-600 dark:text-gray-400 mb-4 text-sm">
+                    {project.data.description}
+                  </p>
+                )}
+                {project.data.technologies && project.data.technologies.length > 0 && (
+                  <div class="flex flex-wrap gap-2">
+                    {project.data.technologies.slice(0, 4).map((tech: string) => (
+                      <span class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </a>
+            );
+          })}
+        </div>
+      </section>
+    )}
+
+    <!-- All Projects -->
+    <section>
+      <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">All Projects</h2>
+      <div class="space-y-6">
+        {projects.map((project: ProjectEntry) => {
+          let slug = project.id.replace(/\.md$/, '').replace(/\/index$/, '');
+          // Normalize to lowercase
+          const parts = slug.split('/');
+          if (parts[0] === 'Projects') parts[0] = 'projects';
+          slug = parts.join('/');
+          return (
+            <article class="border-b border-gray-200 dark:border-gray-700 pb-6">
+              <a
+                href={`/${slug}`}
+                class="block group no-underline"
+              >
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {project.data.title}
+                  {project.data.featured && (
+                    <span class="ml-2 px-2 py-1 text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded">
+                      Featured
+                    </span>
+                  )}
+                </h3>
+                {project.data.description && (
+                  <p class="text-gray-600 dark:text-gray-400 mb-3">
+                    {project.data.description}
+                  </p>
+                )}
+
+                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                  {project.data.start_date && (
+                    <span>
+                      {new Date(project.data.start_date).getFullYear()}
+                      {project.data.end_date && ` - ${new Date(project.data.end_date).getFullYear()}`}
+                    </span>
+                  )}
+
+                  {project.data.technologies && project.data.technologies.length > 0 && (
+                    <div class="flex flex-wrap gap-2">
+                      {project.data.technologies.map((tech: string) => (
+                        <span class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded">
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {(project.data.github_url || project.data.demo_url) && (
+                  <div class="flex gap-4 mt-3">
+                    {project.data.github_url && (
+                      <a
+                        href={project.data.github_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        GitHub →
+                      </a>
+                    )}
+                    {project.data.demo_url && (
+                      <a
+                        href={project.data.demo_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        Live Demo →
+                      </a>
+                    )}
+                  </div>
+                )}
+              </a>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+
+    {projects.length === 0 && (
+      <p class="text-gray-600 dark:text-gray-400">No published projects yet.</p>
+    )}
+  </article>
+</ContentLayout>

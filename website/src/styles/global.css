@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base typography and prose styles */
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply antialiased;
+  }
+
+  /* Custom scrollbar for dark mode */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-gray-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-gray-600;
+  }
+}
+
+/* Prose/Content styling */
+@layer components {
+  .prose-custom {
+    @apply prose prose-gray dark:prose-invert max-w-none;
+    @apply prose-headings:font-bold prose-headings:tracking-tight;
+    @apply prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline;
+    @apply prose-code:text-gray-900 dark:prose-code:text-gray-100;
+    @apply prose-code:bg-gray-100 dark:prose-code:bg-gray-800;
+    @apply prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded;
+    @apply prose-code:before:content-none prose-code:after:content-none;
+    @apply prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800;
+    @apply prose-pre:border prose-pre:border-gray-200 dark:prose-pre:border-gray-700;
+    @apply prose-img:rounded-lg prose-img:shadow-lg;
+    @apply prose-blockquote:border-l-4 prose-blockquote:border-blue-500;
+    @apply prose-blockquote:italic prose-blockquote:text-gray-700 dark:prose-blockquote:text-gray-300;
+  }
+
+  /* Wikilink styling */
+  .wikilink {
+    @apply text-blue-600 dark:text-blue-400 hover:underline;
+    @apply cursor-pointer;
+  }
+
+  .wikilink-missing {
+    @apply text-red-600 dark:text-red-400;
+    @apply cursor-help;
+  }
+
+  /* Callout/Admonition styling */
+  .callout {
+    @apply my-4 p-4 rounded-lg border-l-4;
+  }
+
+  .callout-note {
+    @apply bg-blue-50 dark:bg-blue-950 border-blue-500;
+  }
+
+  .callout-warning {
+    @apply bg-yellow-50 dark:bg-yellow-950 border-yellow-500;
+  }
+
+  .callout-error {
+    @apply bg-red-50 dark:bg-red-950 border-red-500;
+  }
+
+  .callout-success {
+    @apply bg-green-50 dark:bg-green-950 border-green-500;
+  }
+
+  .callout-info {
+    @apply bg-cyan-50 dark:bg-cyan-950 border-cyan-500;
+  }
+}
+
+/* Reader mode - hides sidebars */
+.reader-mode aside {
+  @apply hidden;
+}
+
+.reader-mode main {
+  @apply max-w-4xl mx-auto;
+}
+
+/* Animations */
+@layer utilities {
+  .fade-in {
+    animation: fadeIn 0.2s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}

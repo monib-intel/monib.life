@@ -1,0 +1,34 @@
+---
+import { getEntry } from 'astro:content';
+import ContentLayout from '../layouts/ContentLayout.astro';
+import Breadcrumbs from '../components/header/Breadcrumbs.astro';
+
+// Get the index.md entry
+const entry = await getEntry('content', 'index');
+
+if (!entry) {
+  return Astro.redirect('/404');
+}
+
+const { Content, headings } = await entry.render();
+const { title, description } = entry.data;
+---
+
+<ContentLayout
+  title={title}
+  description={description}
+  frontmatter={entry.data}
+  headings={headings}
+>
+  <Breadcrumbs items={[{ label: 'Home', href: '/' }]} />
+
+  <article class="prose-custom">
+    <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">{title}</h1>
+
+    {description && (
+      <p class="text-xl text-gray-600 dark:text-gray-400 mb-8">{description}</p>
+    )}
+
+    <Content />
+  </article>
+</ContentLayout>

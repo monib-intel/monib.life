@@ -1,0 +1,179 @@
+---
+import { getCollection } from 'astro:content';
+
+export interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+
+// Determine current section from path
+const getCurrentSection = (path: string) => {
+  const parts = path.split('/').filter(Boolean);
+  if (parts.length === 0) return null;
+
+  const firstPart = parts[0].toLowerCase();
+
+  // Map paths to sections
+  if (firstPart === 'articles') return 'Articles';
+  if (firstPart === 'projects') return 'Projects';
+  if (firstPart === 'resume') return 'Resume';
+
+  return null;
+};
+
+const currentSection = getCurrentSection(currentPath);
+
+// Get content for current section
+let sectionItems: Array<{ title: string; href: string; description?: string }> = [];
+
+if (currentSection === 'Articles') {
+  const articles = await getCollection('content', ({ data, id }) => {
+    return (
+      data.type === 'page' &&
+      data.status === 'published' &&
+      data.draft !== true &&
+      id.startsWith('Articles/')
+    );
+  });
+
+  sectionItems = articles
+    .sort((a, b) => {
+      const dateA = a.data.created ? new Date(a.data.created).getTime() : 0;
+      const dateB = b.data.created ? new Date(b.data.created).getTime() : 0;
+      return dateB - dateA;
+    })
+    .map(article => {
+      let slug = article.id.replace(/\.md$/, '').replace(/\/index$/, '');
+      // Normalize first segment to lowercase
+      const parts = slug.split('/');
+      if (parts[0] === 'Articles') parts[0] = 'articles';
+      slug = parts.join('/');
+      return {
+        title: article.data.title,
+        href: `/${slug}`,
+        description: article.data.description,
+      };
+    });
+} else if (currentSection === 'Projects') {
+  const projects = await getCollection('content', ({ data, id }) => {
+    return (
+      data.type === 'project' &&
+      data.status === 'published' &&
+      data.draft !== true &&
+      id.startsWith('Projects/')
+    );
+  });
+
+  sectionItems = projects
+    .sort((a, b) => {
+      // @ts-ignore - we know these are project entries
+      if (a.data.featured && !b.data.featured) return -1;
+      // @ts-ignore
+      if (!a.data.featured && b.data.featured) return 1;
+
+      // @ts-ignore
+      const dateA = a.data.start_date ? new Date(a.data.start_date).getTime() : 0;
+      // @ts-ignore
+      const dateB = b.data.start_date ? new Date(b.data.start_date).getTime() : 0;
+      return dateB - dateA;
+    })
+    .map(project => {
+      let slug = project.id.replace(/\.md$/, '').replace(/\/index$/, '');
+      // Normalize first segment to lowercase
+      const parts = slug.split('/');
+      if (parts[0] === 'Projects') parts[0] = 'projects';
+      slug = parts.join('/');
+      return {
+        title: project.data.title,
+        href: `/${slug}`,
+        description: project.data.description,
+      };
+    });
+} else if (currentSection === 'Resume') {
+  const resumes = await getCollection('content', ({ data, id }) => {
+    return (
+      data.status === 'published' &&
+      data.draft !== true &&
+      id.startsWith('Resume/')
+    );
+  });
+
+  sectionItems = resumes.map(resume => {
+    let slug = resume.id.replace(/\.md$/, '').replace(/\/index$/, '');
+    // Normalize first segment to lowercase
+    const parts = slug.split('/');
+    if (parts[0] === 'Resume') parts[0] = 'resume';
+    slug = parts.join('/');
+    return {
+      title: resume.data.title,
+      href: `/${slug}`,
+      description: resume.data.description,
+    };
+  });
+}
+
+const sectionTitle = currentSection || 'Navigation';
+---
+
+<div class="p-4 space-y-6">
+  <!-- Section Title -->
+  <div>
+    <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
+      {sectionTitle}
+    </h2>
+  </div>
+
+  <!-- Section Contents -->
+  {sectionItems.length > 0 ? (
+    <div>
+      <div class="space-y-2 text-sm">
+        {sectionItems.map(item => (
+          <a
+            href={item.href}
+            class:list={[
+              'block px-3 py-2 rounded-lg transition-colors',
+              currentPath === item.href || currentPath === item.href + '/'
+                ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-medium'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+            ]}
+          >
+            <div class="font-medium">{item.title}</div>
+            {item.description && (
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                {item.description}
+              </div>
+            )}
+          </a>
+        ))}
+      </div>
+    </div>
+  ) : (
+    <div class="text-sm text-gray-500 dark:text-gray-400">
+      No items in this section
+    </div>
+  )}
+
+  <!-- Quick Navigation -->
+  {!currentSection && (
+    <div>
+      <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+        Quick Links
+      </h3>
+      <div class="space-y-1 text-sm">
+        <a href="/" class="block px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          Home
+        </a>
+        <a href="/articles" class="block px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          Articles
+        </a>
+        <a href="/projects" class="block px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          Projects
+        </a>
+        <a href="/resume" class="block px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          Resume
+        </a>
+      </div>
+    </div>
+  )}
+</div>

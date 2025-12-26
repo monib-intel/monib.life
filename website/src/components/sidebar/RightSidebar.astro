@@ -1,0 +1,173 @@
+---
+import { getCollection } from 'astro:content';
+
+export interface Props {
+  headings?: Array<{ depth: number; text: string; slug: string }>;
+  currentPath: string;
+  frontmatter?: Record<string, any>;
+}
+
+const { headings, currentPath, frontmatter } = Astro.props;
+
+// Get current page ID from path
+const getCurrentPageId = (path: string): string | null => {
+  // Remove leading/trailing slashes
+  const cleanPath = path.replace(/^\/|\/$/g, '');
+
+  if (!cleanPath) return 'index.md';
+
+  // Convert path to content ID
+  // e.g., /Articles/mastering-react-hooks -> Articles/mastering-react-hooks.md
+  return `${cleanPath}.md`;
+};
+
+const currentPageId = getCurrentPageId(currentPath);
+
+// Find backlinks - pages that link to this page
+let backlinks: Array<{ title: string; href: string }> = [];
+
+if (currentPageId) {
+  try {
+    const allContent = await getCollection('content', ({ data }) => {
+      return data.status === 'published' && data.draft !== true;
+    });
+
+    // TODO: Implement wikilink parsing to find actual backlinks
+    // For now, this is a placeholder showing related content by tags
+    const currentPage = allContent.find(entry => entry.id === currentPageId);
+
+    if (currentPage && currentPage.data.tags && currentPage.data.tags.length > 0) {
+      const relatedPages = allContent
+        .filter(entry => {
+          if (entry.id === currentPageId) return false;
+          if (!entry.data.tags || entry.data.tags.length === 0) return false;
+
+          // Check if any tags match
+          return entry.data.tags.some(tag =>
+            currentPage.data.tags?.includes(tag)
+          );
+        })
+        .slice(0, 5);
+
+      backlinks = relatedPages.map(page => {
+        const slug = page.id.replace(/\.md$/, '').replace(/\/index$/, '');
+        return {
+          title: page.data.title,
+          href: `/${slug}`,
+        };
+      });
+    }
+  } catch (error) {
+    console.error('Error finding backlinks:', error);
+  }
+}
+
+// Extract tags from frontmatter
+const tags = frontmatter?.tags || [];
+---
+
+<div class="p-4 space-y-6">
+  <!-- Table of Contents -->
+  {headings && headings.length > 0 && (
+    <div>
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-3">
+        On This Page
+      </h3>
+      <nav class="space-y-2">
+        {headings.map((heading) => (
+          <a
+            href={`#${heading.slug}`}
+            class={`block text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
+              heading.depth === 2 ? 'pl-0 font-medium' : heading.depth === 3 ? 'pl-3' : 'pl-6'
+            } text-gray-600 dark:text-gray-400`}
+          >
+            {heading.text}
+          </a>
+        ))}
+      </nav>
+    </div>
+  )}
+
+  <!-- Tags -->
+  {tags.length > 0 && (
+    <div>
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-3">
+        Tags
+      </h3>
+      <div class="flex flex-wrap gap-2">
+        {tags.map((tag: string) => (
+          <span class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+            {tag}
+          </span>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- Knowledge Graph (placeholder) -->
+  <div>
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-3">
+      Graph
+    </h3>
+    <div class="bg-gray-100 dark:bg-gray-800 rounded-lg h-40 flex items-center justify-center text-center p-4">
+      <div>
+        <span class="text-xs text-gray-500 dark:text-gray-400">
+          Knowledge graph visualization
+        </span>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          Coming soon
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backlinks / Related Content -->
+  {backlinks.length > 0 && (
+    <div>
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-3">
+        Related
+      </h3>
+      <div class="space-y-2">
+        {backlinks.map(link => (
+          <a
+            href={link.href}
+            class="block text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
+            → {link.title}
+          </a>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- Metadata -->
+  {frontmatter && (frontmatter.created || frontmatter.updated) && (
+    <div>
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-3">
+        Info
+      </h3>
+      <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+        {frontmatter.created && (
+          <div>
+            <span class="font-medium">Created:</span>{' '}
+            {new Date(frontmatter.created).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            })}
+          </div>
+        )}
+        {frontmatter.updated && (
+          <div>
+            <span class="font-medium">Updated:</span>{' '}
+            {new Date(frontmatter.updated).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )}
+</div>
