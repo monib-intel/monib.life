@@ -28,18 +28,22 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: website/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: cd website && npm ci
 
-      - name: Build Quartz site
-        run: npx quartz build
+      - name: Sync vault content
+        run: cd website && bash scripts/sync-vault.sh
+
+      - name: Build Astro site
+        run: cd website && npm run build
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v6
         with:
           name: site
-          path: public/
+          path: website/dist/
           retention-days: 7
 
   lint:

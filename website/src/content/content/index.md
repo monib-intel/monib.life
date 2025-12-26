@@ -3,14 +3,11 @@ title: monib.life
 description: Personal knowledge base and digital garden
 created: 2025-12-23
 updated: 2025-12-23
-tags:
-  - index
-  - home
 ---
 
 # Welcome to monib.life
 
-This is my personal knowledge base, digital garden, and portfolio. All content is maintained in Obsidian and published to [monib.life](https://monib.life).
+This is my personal knowledge base, digital garden, and portfolio. All content is maintained in Obsidian. We'll use this as the high-level layer for our knowledge management. The Supernote and handwritten will be better to more focused things, and Obsidian and eMacs or something will be better for further away scope. 
 
 ## Core Areas
 
@@ -25,7 +22,7 @@ My professional experience, skills, and career trajectory. Maintained as living 
 
 ## About This System
 
-This vault serves as the source of truth for my personal website. Content is written in markdown, managed in Obsidian, and published using [Quartz](https://quartz.jzhao.xyz/).
+This vault serves as the source of truth for my personal website. Content is written in markdown, managed in Obsidian, and published using [Astro](https://astro.build/).
 
 ### Content Workflow
 1. **Draft**: AI assistants generate initial content with `status: draft`
@@ -46,6 +43,4 @@ Use the sidebar or search to explore content. All notes are interconnected throu
 
 *This section will be populated as content is added*
 
----
 
-*Last updated: 2025-12-23*
