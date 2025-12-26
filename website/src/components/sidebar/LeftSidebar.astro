@@ -30,37 +30,45 @@ let sectionItems: Array<{ title: string; href: string; description?: string }> =
 // Check if we're on the index page
 const isIndexPage = currentPath === '/' || currentPath === '';
 
-// On index page, show recently visited/updated content
+// Helper function to map items to sidebar format
+const mapToSidebarItems = (items: any[]) => {
+  return items.map(item => {
+    let slug = item.id.replace(/\.md$/, '').replace(/\/index$/, '');
+    // Normalize first segment to lowercase
+    const parts = slug.split('/');
+    if (parts[0] === 'Articles' || parts[0] === 'Projects' || parts[0] === 'Resume') {
+      parts[0] = parts[0].toLowerCase();
+    }
+    slug = parts.join('/');
+    return {
+      title: item.data.title,
+      href: `/${slug}`,
+      description: item.data.description,
+    };
+  });
+};
+
+// Helper function to sort by updated/created date
+const sortByDate = (items: any[]) => {
+  return items.sort((a, b) => {
+    const dateA = a.data.updated ? new Date(a.data.updated).getTime() :
+                  a.data.created ? new Date(a.data.created).getTime() : 0;
+    const dateB = b.data.updated ? new Date(b.data.updated).getTime() :
+                  b.data.created ? new Date(b.data.created).getTime() : 0;
+    return dateB - dateA;
+  });
+};
+
+// On index page, show recently updated content from all sections
 if (isIndexPage) {
   // Get all published content sorted by updated date
   const allContent = await getCollection('content', ({ data }) => {
     return data.status === 'published' && data.draft !== true;
   });
 
-  sectionItems = allContent
-    .filter(item => item.id !== 'index.md') // Exclude the index page itself
-    .sort((a, b) => {
-      const dateA = a.data.updated ? new Date(a.data.updated).getTime() :
-                    a.data.created ? new Date(a.data.created).getTime() : 0;
-      const dateB = b.data.updated ? new Date(b.data.updated).getTime() :
-                    b.data.created ? new Date(b.data.created).getTime() : 0;
-      return dateB - dateA;
-    })
-    .slice(0, 10) // Show only the 10 most recently updated
-    .map(item => {
-      let slug = item.id.replace(/\.md$/, '').replace(/\/index$/, '');
-      // Normalize first segment to lowercase
-      const parts = slug.split('/');
-      if (parts[0] === 'Articles' || parts[0] === 'Projects' || parts[0] === 'Resume') {
-        parts[0] = parts[0].toLowerCase();
-      }
-      slug = parts.join('/');
-      return {
-        title: item.data.title,
-        href: `/${slug}`,
-        description: item.data.description,
-      };
-    });
+  sectionItems = mapToSidebarItems(
+    sortByDate(allContent.filter(item => item.id !== 'index.md')).slice(0, 10)
+  );
 } else if (currentSection === 'Articles') {
   const articles = await getCollection('content', ({ data, id }) => {
     return (
@@ -71,24 +79,9 @@ if (isIndexPage) {
     );
   });
 
-  sectionItems = articles
-    .sort((a, b) => {
-      const dateA = a.data.created ? new Date(a.data.created).getTime() : 0;
-      const dateB = b.data.created ? new Date(b.data.created).getTime() : 0;
-      return dateB - dateA;
-    })
-    .map(article => {
-      let slug = article.id.replace(/\.md$/, '').replace(/\/index$/, '');
-      // Normalize first segment to lowercase
-      const parts = slug.split('/');
-      if (parts[0] === 'Articles') parts[0] = 'articles';
-      slug = parts.join('/');
-      return {
-        title: article.data.title,
-        href: `/${slug}`,
-        description: article.data.description,
-      };
-    });
+  sectionItems = mapToSidebarItems(
+    sortByDate(articles).slice(0, 10)
+  );
 } else if (currentSection === 'Projects') {
   const projects = await getCollection('content', ({ data, id }) => {
     return (
@@ -99,31 +92,9 @@ if (isIndexPage) {
     );
   });
 
-  sectionItems = projects
-    .sort((a, b) => {
-      // @ts-ignore - we know these are project entries
-      if (a.data.featured && !b.data.featured) return -1;
-      // @ts-ignore
-      if (!a.data.featured && b.data.featured) return 1;
-
-      // @ts-ignore
-      const dateA = a.data.start_date ? new Date(a.data.start_date).getTime() : 0;
-      // @ts-ignore
-      const dateB = b.data.start_date ? new Date(b.data.start_date).getTime() : 0;
-      return dateB - dateA;
-    })
-    .map(project => {
-      let slug = project.id.replace(/\.md$/, '').replace(/\/index$/, '');
-      // Normalize first segment to lowercase
-      const parts = slug.split('/');
-      if (parts[0] === 'Projects') parts[0] = 'projects';
-      slug = parts.join('/');
-      return {
-        title: project.data.title,
-        href: `/${slug}`,
-        description: project.data.description,
-      };
-    });
+  sectionItems = mapToSidebarItems(
+    sortByDate(projects).slice(0, 10)
+  );
 } else if (currentSection === 'Resume') {
   const resumes = await getCollection('content', ({ data, id }) => {
     return (
@@ -133,21 +104,12 @@ if (isIndexPage) {
     );
   });
 
-  sectionItems = resumes.map(resume => {
-    let slug = resume.id.replace(/\.md$/, '').replace(/\/index$/, '');
-    // Normalize first segment to lowercase
-    const parts = slug.split('/');
-    if (parts[0] === 'Resume') parts[0] = 'resume';
-    slug = parts.join('/');
-    return {
-      title: resume.data.title,
-      href: `/${slug}`,
-      description: resume.data.description,
-    };
-  });
+  sectionItems = mapToSidebarItems(
+    sortByDate(resumes).slice(0, 10)
+  );
 }
 
-const sectionTitle = isIndexPage ? 'Recently Updated' : (currentSection || 'Navigation');
+const sectionTitle = (isIndexPage || currentSection) ? 'Recently Updated' : 'Navigation';
 ---
 
 <div class="p-4 space-y-6">
