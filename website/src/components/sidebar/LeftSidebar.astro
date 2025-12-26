@@ -27,7 +27,41 @@ const currentSection = getCurrentSection(currentPath);
 // Get content for current section
 let sectionItems: Array<{ title: string; href: string; description?: string }> = [];
 
-if (currentSection === 'Articles') {
+// Check if we're on the index page
+const isIndexPage = currentPath === '/' || currentPath === '';
+
+// On index page, show recently visited/updated content
+if (isIndexPage) {
+  // Get all published content sorted by updated date
+  const allContent = await getCollection('content', ({ data }) => {
+    return data.status === 'published' && data.draft !== true;
+  });
+
+  sectionItems = allContent
+    .filter(item => item.id !== 'index.md') // Exclude the index page itself
+    .sort((a, b) => {
+      const dateA = a.data.updated ? new Date(a.data.updated).getTime() :
+                    a.data.created ? new Date(a.data.created).getTime() : 0;
+      const dateB = b.data.updated ? new Date(b.data.updated).getTime() :
+                    b.data.created ? new Date(b.data.created).getTime() : 0;
+      return dateB - dateA;
+    })
+    .slice(0, 10) // Show only the 10 most recently updated
+    .map(item => {
+      let slug = item.id.replace(/\.md$/, '').replace(/\/index$/, '');
+      // Normalize first segment to lowercase
+      const parts = slug.split('/');
+      if (parts[0] === 'Articles' || parts[0] === 'Projects' || parts[0] === 'Resume') {
+        parts[0] = parts[0].toLowerCase();
+      }
+      slug = parts.join('/');
+      return {
+        title: item.data.title,
+        href: `/${slug}`,
+        description: item.data.description,
+      };
+    });
+} else if (currentSection === 'Articles') {
   const articles = await getCollection('content', ({ data, id }) => {
     return (
       data.type === 'page' &&
@@ -113,7 +147,7 @@ if (currentSection === 'Articles') {
   });
 }
 
-const sectionTitle = currentSection || 'Navigation';
+const sectionTitle = isIndexPage ? 'Recently Updated' : (currentSection || 'Navigation');
 ---
 
 <div class="p-4 space-y-6">
@@ -154,8 +188,8 @@ const sectionTitle = currentSection || 'Navigation';
     </div>
   )}
 
-  <!-- Quick Navigation -->
-  {!currentSection && (
+  <!-- Quick Navigation - only show when not on index page and not in a section -->
+  {!currentSection && !isIndexPage && (
     <div>
       <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
         Quick Links

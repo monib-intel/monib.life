@@ -23,12 +23,6 @@ const { title, description } = entry.data;
   <Breadcrumbs items={[{ label: 'Home', href: '/' }]} />
 
   <article class="prose-custom">
-    <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">{title}</h1>
-
-    {description && (
-      <p class="text-xl text-gray-600 dark:text-gray-400 mb-8">{description}</p>
-    )}
-
     <Content />
   </article>
 </ContentLayout>
