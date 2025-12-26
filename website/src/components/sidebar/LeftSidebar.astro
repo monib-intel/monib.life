@@ -1,11 +1,24 @@
 ---
 import { getCollection } from 'astro:content';
+import fs from 'fs';
+import path from 'path';
 
 export interface Props {
   currentPath: string;
 }
 
 const { currentPath } = Astro.props;
+
+// Helper to get file modification time
+const getFileModTime = (id: string): number => {
+  try {
+    const filePath = path.join(process.cwd(), 'src/content/content', id);
+    const stats = fs.statSync(filePath);
+    return stats.mtimeMs;
+  } catch {
+    return 0;
+  }
+};
 
 // Determine current section from path
 const getCurrentSection = (path: string) => {
@@ -48,13 +61,16 @@ const mapToSidebarItems = (items: any[]) => {
   });
 };
 
-// Helper function to sort by updated/created date
+// Helper function to sort by updated/created date (with file mod time fallback)
 const sortByDate = (items: any[]) => {
   return items.sort((a, b) => {
+    // Get date from frontmatter or fall back to file modification time
     const dateA = a.data.updated ? new Date(a.data.updated).getTime() :
-                  a.data.created ? new Date(a.data.created).getTime() : 0;
+                  a.data.created ? new Date(a.data.created).getTime() :
+                  getFileModTime(a.id);
     const dateB = b.data.updated ? new Date(b.data.updated).getTime() :
-                  b.data.created ? new Date(b.data.created).getTime() : 0;
+                  b.data.created ? new Date(b.data.created).getTime() :
+                  getFileModTime(b.id);
     return dateB - dateA;
   });
 };
