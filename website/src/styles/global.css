@@ -47,15 +47,29 @@
     @apply prose-blockquote:italic prose-blockquote:text-gray-700 dark:prose-blockquote:text-gray-300;
   }
 
-  /* Wikilink styling */
+  /* Wikilink styling - Obsidian-inspired */
   .wikilink {
-    @apply text-blue-600 dark:text-blue-400 hover:underline;
-    @apply cursor-pointer;
+    @apply text-blue-600 dark:text-blue-400;
+    @apply no-underline cursor-pointer;
+    @apply border-b border-blue-300/30 dark:border-blue-500/30;
+    @apply transition-colors duration-200;
   }
 
-  .wikilink-missing {
+  .wikilink:hover {
+    @apply border-blue-600 dark:border-blue-400;
+  }
+
+  /* Dead/broken wikilinks */
+  .wikilink-dead {
     @apply text-red-600 dark:text-red-400;
-    @apply cursor-help;
+    @apply line-through opacity-70;
+    @apply cursor-not-allowed;
+  }
+
+  /* Image embeds from wikilinks */
+  .wikilink-embed {
+    @apply max-w-full h-auto rounded-lg;
+    @apply my-4 shadow-md;
   }
 
   /* Callout/Admonition styling */

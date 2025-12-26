@@ -7,7 +7,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 
 // Custom plugins (will be created)
-// import { remarkWikilinks } from './src/lib/markdown/remark-wikilinks.js';
+import { remarkWikilinks } from './src/lib/markdown/remark-wikilinks.js';
 // import { remarkCallouts } from './src/lib/markdown/remark-callouts.js';
 // import { rehypeHeadings } from './src/lib/markdown/rehype-headings.js';
 import { rehypeExternalLinks } from './src/lib/markdown/rehype-external-links.js';
@@ -28,7 +28,7 @@ export default defineConfig({
   markdown: {
     remarkPlugins: [
       remarkMath,
-      // remarkWikilinks, // TODO: Enable after creating the plugin
+      remarkWikilinks,
       // remarkCallouts, // TODO: Enable after creating the plugin
     ],
     rehypePlugins: [
