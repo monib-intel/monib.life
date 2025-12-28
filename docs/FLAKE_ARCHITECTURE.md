@@ -208,10 +208,10 @@ node --version    # ✗ Not available (not needed for this service)
 nix develop path:./services/reading-assistant -c pytest
 
 # Build entire project
-nix develop -c make build
+nix develop -c ./scripts/build.sh
 
 # Run full test suite
-nix develop -c make test
+nix develop -c ./scripts/test.sh
 ```
 
 ## Benefits

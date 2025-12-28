@@ -34,7 +34,7 @@ jobs:
         run: cd website && npm ci
 
       - name: Sync vault content
-        run: cd website && bash scripts/sync-vault.sh
+        run: bash scripts/sync-vault.sh
 
       - name: Build Astro site
         run: cd website && npm run build

@@ -83,38 +83,52 @@ npx quartz build
 npx quartz serve
 ```
 
-## Make Commands
+## Build Commands
 
-The project includes a Makefile for consistent build operations:
+The project includes executable shell scripts for consistent build operations:
 
 ```bash
-make install    # Install dependencies
-make dev        # Start development server with hot reload
-make build      # Build for production
-make test       # Run tests and validate configuration
-make clean      # Clean build artifacts
-make sync       # Sync external project documentation
-make deploy     # Build and deploy to production
-make help       # Show all available commands
+./scripts/install.sh    # Install dependencies
+./scripts/dev.sh        # Start development server with hot reload
+./scripts/build.sh      # Build for production
+./scripts/test.sh       # Run tests and validate configuration
+./scripts/clean.sh      # Clean build artifacts
+./scripts/sync-projects.sh  # Sync external project documentation
+./scripts/deploy.sh     # Build and deploy to production
+./scripts/help.sh       # Show all available commands
 ```
 
-### Quick Start with Make
+Or use the main dispatcher:
+
+```bash
+./monib.sh install      # Install dependencies
+./monib.sh dev          # Start development server
+./monib.sh build        # Build for production
+./monib.sh help         # Show all commands
+```
+
+### Quick Start
 
 ```bash
 # Initial setup
-make install
+./scripts/install.sh
 
 # Start development
-make dev
+./scripts/dev.sh
 
 # Start admin dashboard (API + UI)
-make admin-full
+./scripts/admin-full.sh
 
 # Start everything (admin + Quartz)
-make admin-dev
+./scripts/admin-dev.sh
 
 # Build for production
-make build
+./scripts/build.sh
+```
+
+For detailed help on any command:
+```bash
+./scripts/<command>.sh --help
 ```
 
 ## Admin Dashboard

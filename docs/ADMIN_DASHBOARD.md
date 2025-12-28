@@ -10,7 +10,7 @@ The admin dashboard provides a web-based interface for managing EPUB book proces
 
 ```bash
 cd /path/to/monib.life
-make install
+./scripts/install.sh
 ```
 
 This will install:
@@ -23,7 +23,7 @@ This will install:
 #### Option A: Admin Dashboard Only (Recommended for Development)
 
 ```bash
-make admin-full
+./scripts/admin-full.sh
 ```
 
 This starts:
@@ -33,7 +33,7 @@ This starts:
 #### Option B: Full Stack (Admin + Quartz Website)
 
 ```bash
-make admin-dev
+./scripts/admin-dev.sh
 ```
 
 This starts:
@@ -45,10 +45,10 @@ This starts:
 
 ```bash
 # Just the API
-make admin-server
+./scripts/admin-server.sh
 
 # Just the UI
-make admin-ui
+./scripts/admin-ui.sh
 ```
 
 ### 3. Access the Dashboard
@@ -145,7 +145,7 @@ If ports are already in use:
 
 ```bash
 # Stop all services
-make stop
+./scripts/stop.sh
 
 # Or manually:
 pkill -f uvicorn
