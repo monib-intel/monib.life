@@ -1,10 +1,6 @@
 # Dependencies
 node_modules/
 
-# Build output
-public/
-.quartz-cache/
-
 # Environment files
 .env
 .env.local
@@ -55,14 +51,12 @@ htmlcov/
 coverage/
 .vitest/
 
-# Admin API
-admin-api/uploads/
-admin-api/data/
-admin-api/logs/
-
 # Admin UI
 admin-ui/node_modules/
 admin-ui/dist/
 admin-ui/.env
 admin-ui/.env.local
 .envrc
+
+# Private/generated content
+private/

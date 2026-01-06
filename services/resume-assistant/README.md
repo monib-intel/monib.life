@@ -15,7 +15,7 @@ The Resume Assistant takes your master resume data and a job description, then g
 nix develop
 
 cd services/resume-assistant
-python main.py --job-description "Software Engineer at Company X..."
+python main.py --job-description description.txt
 ```
 
 ### Manual Setup

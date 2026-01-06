@@ -17,7 +17,7 @@ status: published
 ## Overview
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-
+Yeah this is not a real project. 
 ## Features
 
 - **Real-time Collaboration**: Lorem ipsum dolor sit amet, consectetur adipiscing elit

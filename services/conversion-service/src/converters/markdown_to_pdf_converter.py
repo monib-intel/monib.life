@@ -22,6 +22,7 @@ class MarkdownToPDFConverter(BaseConverter):
                 'codehilite',  # Code syntax highlighting
                 'toc',  # Generates [TOC] placeholder for table of contents
                 'meta',  # Metadata support
+                'attr_list',  # Allows ID attributes on headers for internal links
             ]
         )
 
@@ -328,7 +329,11 @@ class MarkdownToPDFConverter(BaseConverter):
             text-decoration: none;
         }}
         a:hover {{
-            text-decoration: underline;
+            text-decoration: none;
+        }}
+        /* Ensure internal links work in PDF */
+        a[href^="#"] {{
+            color: #0066cc;
         }}
     </style>
 </head>
