@@ -1,0 +1,138 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import ContentLayout from '../layouts/ContentLayout.astro';
+import Breadcrumbs from '../components/header/Breadcrumbs.astro';
+
+type ObjectiveEntry = CollectionEntry<'content'> & {
+  data: {
+    type: 'page';
+    title: string;
+    description?: string;
+    tags: string[];
+    created?: Date;
+    updated?: Date;
+    status: 'draft' | 'published';
+    draft: boolean;
+  };
+};
+
+// Get all objective entries that are published (not draft)
+const allObjectives = await getCollection('content', ({ data, id }) => {
+  return (
+    data.type === 'page' &&
+    data.status === 'published' &&
+    data.draft !== true &&
+    id.startsWith('Objectives/')
+  );
+}) as ObjectiveEntry[];
+
+// Sort by created date (newest first)
+const objectives = allObjectives.sort((a, b) => {
+  const dateA = a.data.created ? new Date(a.data.created) : new Date(0);
+  const dateB = b.data.created ? new Date(b.data.created) : new Date(0);
+  return dateB.getTime() - dateA.getTime();
+});
+
+// Get unique tags from all objectives
+const allTags = new Set<string>();
+objectives.forEach(objective => {
+  objective.data.tags?.forEach((tag: string) => allTags.add(tag));
+});
+const uniqueTags = Array.from(allTags).sort();
+
+const title = 'Objectives';
+const description = 'Personal and professional objectives, goals, and milestones';
+---
+
+<ContentLayout
+  title={title}
+  description={description}
+  frontmatter={{ title, description, type: 'page' }}
+  headings={[]}
+>
+  <Breadcrumbs items={[
+    { label: 'Home', href: '/' },
+    { label: 'Objectives', href: '/objectives' }
+  ]} />
+
+  <article class="prose-custom">
+    <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">{title}</h1>
+    <p class="text-xl text-gray-600 dark:text-gray-400 mb-8">{description}</p>
+
+    <!-- Tags Filter (optional, can be made interactive with JS) -->
+    {uniqueTags.length > 0 && (
+      <section class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Topics</h2>
+        <div class="flex flex-wrap gap-2">
+          {uniqueTags.map((tag: string) => (
+            <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+              {tag}
+            </span>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Objectives List -->
+    <section>
+      <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Current Objectives</h2>
+      <div class="space-y-8">
+        {objectives.map((objective: ObjectiveEntry) => {
+          let slug = objective.id.replace(/\.md$/, '').replace(/\/index$/, '');
+          // Normalize to lowercase
+          const parts = slug.split('/');
+          if (parts[0] === 'Objectives') parts[0] = 'objectives';
+          slug = parts.join('/');
+          return (
+            <article class="border-b border-gray-200 dark:border-gray-700 pb-8">
+              <a
+                href={`/${slug}`}
+                class="block group no-underline"
+              >
+                <h3 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {objective.data.title}
+                </h3>
+
+                {objective.data.description && (
+                  <p class="text-gray-600 dark:text-gray-400 mb-3 text-lg">
+                    {objective.data.description}
+                  </p>
+                )}
+
+                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                  {objective.data.created && (
+                    <time datetime={new Date(objective.data.created).toISOString()}>
+                      {new Date(objective.data.created).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </time>
+                  )}
+
+                  {objective.data.tags && objective.data.tags.length > 0 && (
+                    <div class="flex flex-wrap gap-2">
+                      {objective.data.tags.slice(0, 5).map((tag: string) => (
+                        <span class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <p class="text-blue-600 dark:text-blue-400 text-sm mt-3 group-hover:underline">
+                  Read more →
+                </p>
+              </a>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+
+    {objectives.length === 0 && (
+      <p class="text-gray-600 dark:text-gray-400">No published objectives yet.</p>
+    )}
+  </article>
+</ContentLayout>
