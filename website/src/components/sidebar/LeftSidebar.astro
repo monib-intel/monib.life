@@ -29,6 +29,7 @@ const getCurrentSection = (path: string) => {
 
   // Map paths to sections
   if (firstPart === 'articles') return 'Articles';
+  if (firstPart === 'objectives') return 'Objectives';
   if (firstPart === 'projects') return 'Projects';
   if (firstPart === 'resume') return 'Resume';
 
@@ -49,7 +50,7 @@ const mapToSidebarItems = (items: any[]) => {
     let slug = item.id.replace(/\.md$/, '').replace(/\/index$/, '');
     // Normalize first segment to lowercase
     const parts = slug.split('/');
-    if (parts[0] === 'Articles' || parts[0] === 'Projects' || parts[0] === 'Resume') {
+    if (parts[0] === 'Articles' || parts[0] === 'Objectives' || parts[0] === 'Projects' || parts[0] === 'Resume') {
       parts[0] = parts[0].toLowerCase();
     }
     slug = parts.join('/');
@@ -97,6 +98,19 @@ if (isIndexPage) {
 
   sectionItems = mapToSidebarItems(
     sortByDate(articles).slice(0, 10)
+  );
+} else if (currentSection === 'Objectives') {
+  const objectives = await getCollection('content', ({ data, id }) => {
+    return (
+      data.type === 'page' &&
+      data.status === 'published' &&
+      data.draft !== true &&
+      id.startsWith('Objectives/')
+    );
+  });
+
+  sectionItems = mapToSidebarItems(
+    sortByDate(objectives).slice(0, 10)
   );
 } else if (currentSection === 'Projects') {
   const projects = await getCollection('content', ({ data, id }) => {
@@ -178,6 +192,9 @@ const sectionTitle = (isIndexPage || currentSection) ? 'Recently Updated' : 'Nav
         </a>
         <a href="/articles" class="block px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           Articles
+        </a>
+        <a href="/objectives" class="block px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          Objectives
         </a>
         <a href="/projects" class="block px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           Projects

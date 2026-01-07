@@ -23,6 +23,7 @@ async function hasMarkdownFiles(dirPath: string): Promise<boolean> {
  */
 const ROUTE_MAPPING: Record<string, string> = {
   'Articles': '/articles',
+  'Objectives': '/objectives',
   'Projects': '/projects',
   'Resume': '/resume',
 };
